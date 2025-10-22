@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>제휴점 통계</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<style>
+    /* ===== 전체 배경 ===== */
+    body { 
+        background-color: #2c2c3e;
+        color: #f1f1f1;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    /* ===== 타이틀 ===== */
+    h2 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #ffb74d;
+        text-shadow: 1px 1px 4px rgba(0,0,0,0.4);
+        display: inline-block;
+        margin-bottom: 20px;
+        position: relative;
+    }
+    h2::after {
+        content: '';
+        display: block;
+        width: 40%;
+        height: 3px;
+        background: #ffb74d;
+        margin-top: 6px;
+        border-radius: 2px;
+    }
+
+    /* ===== 검색창 ===== */
+    .search-box .form-control-wrapper {
+        position: relative;
+        width: 100%;
+        height: 100%;
+    }
+    .search-box .form-control {
+        background-color: #3a3a51;
+        color: #f1f1f1;
+        border: 1px solid #555;
+        width: 100%;
+        height: 100%;
+        padding: 0.5rem;
+    }
+    .search-box .form-control::placeholder {
+        color: #ccc;
+    }
+    .search-box .btn-primary {
+        background: linear-gradient(90deg, #4da6ff, #1a73e8);
+        border: none;
+    }
+    .search-box .btn-primary:hover {
+        background: linear-gradient(90deg, #357ae8, #1a53c3);
+    }
+
+    /* ===== 통계 카드 ===== */
+    .stats-summary {
+        background: #3a3a51;
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+        text-align: center;
+    }
+    .stats-summary h4 {
+        font-weight: 600;
+        margin-bottom: 25px;
+        color: #fff;
+    }
+
+    /* ===== Progress Bar ===== */
+    .progress {
+        height: 35px;
+        border-radius: 20px;
+        background-color: #50506a;
+        overflow: hidden;
+    }
+    .progress-bar {
+        font-weight: 600;
+        font-size: 1rem;
+        line-height: 35px;
+        color: #fff;
+    }
+    #viewProgress { background: linear-gradient(90deg, #ffb74d, #ff9800); }
+    #phoneProgress { background: linear-gradient(90deg, #1565c0, #1e88e5); } /* 어두운 파란색 */
+
+    .summary-text {
+        margin-top: 8px;
+        font-size: 1rem;
+        color: #ccc;
+    }
+
+    /* ===== 반응형 ===== */
+    @media(max-width: 768px) {
+        h2 { font-size: 1.5rem; }
+        .progress { height: 28px; }
+    }
+</style>
+</head>
+<body>
+<div class="container mt-5">
+
+    <h2>📊 제휴점 통계</h2>
+
+    
+
+    <!-- 전체 통계 요약 -->
+    <div class="stats-summary">
+        <h4>전체 제휴점 통계 요약</h4>
+
+        <!-- 전체 조회수 -->
+        <div class="mb-4">
+            <h6 class="text-secondary">전체 조회수</h6>
+            <div class="progress">
+                <div id="viewProgress" class="progress-bar" role="progressbar" style="width:0%;">
+                    <span id="viewCountText">0</span>
+                </div>
+            </div>
+            <div class="summary-text" id="viewSummary">
+                오늘까지 누적 조회수는 총 <strong>0회</strong>입니다.
+            </div>
+        </div>
+
+        <!-- 전체 전화문의 -->
+        <div class="mb-4">
+            <h6 class="text-secondary">전체 전화문의</h6>
+            <div class="progress">
+                <div id="phoneProgress" class="progress-bar" role="progressbar" style="width:0%;">
+                    <span id="phoneCountText">0</span>
+                </div>
+            </div>
+            <div class="summary-text" id="phoneSummary">
+                오늘까지 누적 전화문의는 총 <strong>0건</strong>입니다.
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script th:inline="javascript">
+    const totalView = [[${totalStats['view']}]] || 0;
+    const totalPhone = [[${totalStats['phone']}]] || 0;
+
+    // 조회수 Progress Bar
+    const viewProgress = document.getElementById('viewProgress');
+    const viewCountText = document.getElementById('viewCountText');
+    const viewSummary = document.getElementById('viewSummary');
+    const maxView = Math.max(totalView, 100);
+    const viewPercent = Math.round((totalView / maxView) * 100);
+    let currentView = 0;
+    const animateView = setInterval(() => {
+        if(currentView >= viewPercent) clearInterval(animateView);
+        currentView++;
+        viewProgress.style.width = currentView + '%';
+        viewCountText.innerText = totalView.toLocaleString() + '회';
+        viewSummary.innerHTML = `현재 누적 조회수는 총 <strong>${totalView.toLocaleString()}회</strong> 입니다.`;
+    }, 10);
+
+    // 전화문의 Progress Bar
+    const phoneProgress = document.getElementById('phoneProgress');
+    const phoneCountText = document.getElementById('phoneCountText');
+    const phoneSummary = document.getElementById('phoneSummary');
+    const maxPhone = Math.max(totalPhone, 100);
+    const phonePercent = Math.round((totalPhone / maxPhone) * 100);
+    let currentPhone = 0;
+    const animatePhone = setInterval(() => {
+        if(currentPhone >= phonePercent) clearInterval(animatePhone);
+        currentPhone++;
+        phoneProgress.style.width = currentPhone + '%';
+        phoneCountText.innerText = totalPhone.toLocaleString() + '건';
+        phoneSummary.innerHTML = `현재 누적 전화문의는 총 <strong>${totalPhone.toLocaleString()}건</strong> 입니다.`;
+    }, 10);
+
+    // 검색 기능 (준비용)
+    function searchStats() {
+        const partnerName = document.getElementById('partnerName').value;
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        console.log('검색:', partnerName, startDate, endDate);
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/layouts/ad_layout}">
+
+<th:block layout:fragment="script">
+  <script src="/ckeditor/ckeditor.js"></script>
+  <style>
+    .card { border-radius: 1rem; overflow: hidden; }
+    table thead { background-color: #f8f9fa; font-weight: 600; }
+    table tbody tr:hover { background-color: #f1f5ff; transition: background 0.2s; }
+    table tbody tr.checked { background-color: #dbeaff; }
+    table img { transition: none; }
+    .btn-sm { font-size: 0.85rem; border-radius: 0.5rem; }
+    .btn-outline-primary:hover { background-color: #0d6efd; color: white; }
+    .btn-outline-danger:hover { background-color: #dc3545; color: white; }
+    .pagination .page-item.active .page-link { background-color: #0d6efd; border-color: #0d6efd; }
+    .pagination .page-link:hover { background-color: #e9ecef; }
+  </style>
+</th:block>
+
+<th:block layout:fragment="content">
+
+<div class="container-fluid px-4 py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-12">
+      <div class="card shadow-lg border-0">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+		  <h3 class="card-title mb-0">업체 목록</h3>
+		</div>
+
+        <div class="card-body p-4">
+
+          <!-- 검색 + 필터 폼 -->
+          <form id="frm_search" action="/admin/product/pro_list" method="get" class="mb-4">
+
+            <!-- 검색어 -->
+            <div class="row g-3 align-items-center">
+              <div class="col-md-2 fw-bold">검색어</div>
+              <div class="col-md-3">
+                <select name="searchType" class="form-select form-select-sm">
+                  <option value="" th:selected="${searchType == null}">검색종류 선택</option>
+                  <option value="n" th:selected="${searchType == 'n'}">업체명</option>
+                  <option value="p" th:selected="${searchType == 'p'}">연락처</option>
+                  <option value="a" th:selected="${searchType == 'a'}">주소</option>
+                </select>
+              </div>
+              <div class="col-md-7">
+                <input type="text" name="keyword" class="form-control form-control-sm" th:value="${keyword}" placeholder="검색어 입력">
+              </div>
+            </div>
+
+            <!-- 테마별 카테고리 -->
+            <div class="row mt-3">
+              <div class="col-2 fw-bold">테마별 카테고리</div>
+              <div class="col-5">
+                <select class="form-select form-select-sm" name="themeCode">
+                  <option value="">전체 테마</option>
+                  <option th:each="theme : ${themeList}"
+                          th:value="${theme.theme_code}"
+                          th:text="${theme.theme_name}"
+                          th:selected="${theme.theme_code} == ${selectedThemeCode}">
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <!-- 날짜 필터 -->
+            <div class="row g-3 align-items-center mt-3">
+              <div class="col-md-2 fw-bold">날짜(등록일)</div>
+              <div class="col-md-3">
+                <input type="date" id="start_date" name="start_date" class="form-control form-control-sm mb-2" th:value="${start_date}">
+                <input type="date" id="end_date" name="end_date" class="form-control form-control-sm" th:value="${end_date}">
+              </div>
+              <div class="col-md-5 text-end">
+                <input type="hidden" id="period" name="period" th:value="${period}">
+                <button type="button" class="btn btn-sm btn-outline-info" value="today" onclick="setPeriod('today')">오늘</button>
+                <button type="button" class="btn btn-sm btn-outline-info" value="3days" onclick="setPeriod('3days')">3일</button>
+                <button type="button" class="btn btn-sm btn-outline-info" value="week" onclick="setPeriod('week')">일주일</button>
+                <button type="button" class="btn btn-sm btn-outline-info" value="month" onclick="setPeriod('month')">1개월</button>
+                <button type="button" class="btn btn-sm btn-outline-info" value="3months" onclick="setPeriod('3months')">3개월</button>
+                <button type="button" class="btn btn-sm btn-outline-info" value="all" onclick="setPeriod('all')">전체</button>
+              </div>
+            </div>
+
+            <!-- 검색/초기화 버튼 -->
+            <div class="row mt-3">
+              <div class="col text-center">
+                <button type="submit" class="btn btn-primary px-4">검색</button>
+                <button type="button" class="btn btn-outline-secondary px-4" onclick="resetFilters()">초기화</button>
+              </div>
+            </div>
+            
+			<div>
+		    <!-- 상단 선택삭제 버튼: 테이블 밖에서 form="frm_pro_list"로 연결 -->
+		    <button type="submit" class="btn btn-outline-danger btn-sm" form="frm_pro_list" id="btn_delete_confirm">
+		        선택삭제
+		    </button>
+			</div>
+
+          </form>
+
+          <!-- 상품 리스트 테이블 -->
+          <form name="frm_pro_list" id="frm_pro_list" method="post" action="/admin/product/pro_sel_delete">
+            <table class="table table-hover align-middle text-center">
+              <thead>
+                <tr>
+                  <th><input type="checkbox" id="checkAll"></th>
+                  <th>업체번호</th>
+                  <th>업체명</th>
+                  <th>이미지</th>
+                  <th>연락처</th>
+                  <th>주소</th>
+                  <th>등록일</th>
+                  <th>게시여부</th>
+                  <th>관리</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="productVO:${pro_list}">
+                  <td>
+                    <input type="checkbox" name="pro_num_arr" th:value="${productVO.pro_num}">
+                    <input type="hidden" name="pro_up_folder" th:value="${productVO.pro_up_folder}">
+                    <input type="hidden" name="pro_img" th:value="|s_${productVO.pro_img}|">
+                  </td>
+                  <td>[[${productVO.pro_num}]]</td>
+                  <td class="fw-bold text-start">[[${productVO.pro_name}]]</td>
+                  <td>
+                    <img th:src="${'image_display?dateFolderName=' + productVO.pro_up_folder + '&fileName=s_' + productVO.pro_img}"
+                         style="width:75px; height:75px; object-fit:cover; border-radius:8px; border:1px solid #ddd;">
+                  </td>
+                  <td>[[${productVO.pro_telephone}]]</td>
+                  <td class="text-start">[[${productVO.pro_addr}]], [[${productVO.pro_deaddr}]]</td>
+                  <td>[[${#dates.format(productVO.pro_date, 'yyyy-MM-dd HH:mm:ss')}]]</td>
+                  <td><span th:text="${productVO.pro_buy == 'Y' ? '게시중' : '미게시'}"></span></td>
+                  <td class="d-flex justify-content-center gap-2">
+                    <button type="button" class="btn btn-primary btn-sm" th:data-pro_num="${productVO.pro_num}" name="btn_pro_edit">수정</button>
+                    <button type="button" class="btn btn-danger btn-sm" th:data-pro_num="${productVO.pro_num}" name="btn_pro_del">삭제</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </form>
+
+          <!-- 페이징 -->
+          <div class="d-flex justify-content-center mt-4">
+            <nav aria-label="Page navigation">
+              <ul class="pagination">
+                <th:block th:if="${pageMaker.prev}">
+                  <li class="page-item"><a class="page-link" th:href="|/admin/product/pro_list${pageMaker.makeSearch(pageMaker.startPage - 1)}|">이전</a></li>
+                </th:block>
+
+                <th:block th:each="num : ${#numbers.sequence(pageMaker.startPage, pageMaker.endPage)}">
+                  <li class="page-item" th:classappend="${pageMaker.cri.page == num ? 'active' : ''}">
+                    <a class="page-link" th:href="|/admin/product/pro_list${pageMaker.makeSearch(num)}|" th:text="${num}"></a>
+                  </li>
+                </th:block>
+
+                <th:block th:if="${pageMaker.next}">
+                  <li class="page-item"><a class="page-link" th:href="|/admin/product/pro_list${pageMaker.makeSearch(pageMaker.endPage + 1)}|">다음</a></li>
+                </th:block>
+              </ul>
+            </nav>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  // 테이블 체크박스 행 선택 기능
+  document.querySelectorAll("tbody tr").forEach(function(row) {
+    row.addEventListener("click", function(e) {
+      if (e.target.tagName === "BUTTON" || e.target.tagName === "A" || e.target.type === "checkbox") return;
+      const checkBox = row.querySelector("input[name='pro_num_arr']");
+      if (checkBox) {
+        checkBox.checked = !checkBox.checked;
+        row.classList.toggle("checked", checkBox.checked);
+      }
+    });
+  });
+
+  document.querySelectorAll("input[name='pro_num_arr']").forEach(function(chk) {
+    chk.addEventListener("change", function() {
+      const row = this.closest("tr");
+      row.classList.toggle("checked", this.checked);
+    });
+  });
+
+  // 전체 선택 체크박스
+  const checkAll = document.getElementById("checkAll");
+  if (checkAll) {
+    checkAll.addEventListener("change", function() {
+      const allChecks = document.querySelectorAll("tbody input[name='pro_num_arr']");
+      allChecks.forEach(chk => {
+        chk.checked = this.checked;
+        chk.closest("tr").classList.toggle("checked", this.checked);
+      });
+    });
+  }
+
+  // 수정 버튼 클릭 이벤트
+  const editButtons = document.querySelectorAll("button[name='btn_pro_edit']");
+  editButtons.forEach(button => {
+    button.addEventListener("click", function() {
+      const proNum = this.getAttribute("data-pro_num");
+      if (proNum) {
+        const page = document.querySelector("input[name='page']")?.value || 1;
+        const perPageNum = document.querySelector("input[name='perPageNum']")?.value || 10;
+        const searchType = document.querySelector("input[name='searchType']")?.value || '';
+        const keyword = document.querySelector("input[name='keyword']")?.value || '';
+
+        const params = new URLSearchParams({
+          pro_num: proNum,
+          page: page,
+          perPageNum: perPageNum,
+          searchType: searchType,
+          keyword: keyword
+        });
+
+        window.location.href = `/admin/product/pro_edit?${params.toString()}`;
+      }
+    });
+  });
+  
+  const deleteBtn = document.getElementById("btn_delete_confirm");
+  const form = document.getElementById("frm_pro_list");
+
+  if(deleteBtn && form){
+      deleteBtn.addEventListener("click", function(e){
+          const checkedBoxes = form.querySelectorAll("input[name='check']:checked, input[name='pro_num_arr']:checked");
+          if(checkedBoxes.length === 0){
+              e.preventDefault();
+              alert("삭제할 항목을 선택해주세요.");
+              return;
+          }
+
+          if(!confirm("선택한 항목을 정말 삭제하시겠습니까?")){
+              e.preventDefault(); // 취소 누르면 폼 제출 막기
+          }
+      });
+  }
+  
+  //개별 삭제 버튼 클릭 이벤트
+  const delButtons = document.querySelectorAll("button[name='btn_pro_del']");
+  delButtons.forEach(btn => {
+      btn.addEventListener("click", function(e){
+          const proNum = this.getAttribute("data-pro_num");
+          if(!proNum) return;
+
+          // 확인창
+          if(!confirm("선택한 항목을 정말 삭제하시겠습니까?")) return;
+
+          // 폼을 동적으로 만들어서 POST 요청
+          const form = document.createElement("form");
+          form.method = "post";
+          form.action = "/admin/product/pro_sel_delete";
+
+          // pro_num_arr 배열로 넣기
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = "pro_num_arr";
+          input.value = proNum;
+          form.appendChild(input);
+
+          document.body.appendChild(form);
+          form.submit();
+      });
+  });
+  
+});
+
+// 날짜 버튼 클릭 시 자동 반영
+function setPeriod(value){
+  const periodInput = document.getElementById('period');
+  const startDateInput = document.getElementById('start_date');
+  const endDateInput = document.getElementById('end_date');
+  const today = new Date();
+  let startDate = today;
+
+  switch(value){
+    case 'today': startDate = today; break;
+    case '3days': startDate = new Date(); startDate.setDate(today.getDate() - 2); break;
+    case 'week': startDate = new Date(); startDate.setDate(today.getDate() - 6); break;
+    case 'month': startDate = new Date(); startDate.setMonth(today.getMonth() - 1); break;
+    case '3months': startDate = new Date(); startDate.setMonth(today.getMonth() - 3); break;
+    case 'all': startDate = ''; break;
+  }
+
+  periodInput.value = value;
+
+  if(value === 'all'){
+    startDateInput.value = '';
+    endDateInput.value = '';
+  } else {
+    startDateInput.value = startDate.toISOString().split('T')[0];
+    endDateInput.value = today.toISOString().split('T')[0];
+  }
+}
+
+// 필터 초기화
+function resetFilters() {
+  document.querySelector("input[name='keyword']").value = '';
+  const searchTypeSelect = document.querySelector("select[name='searchType']");
+  if (searchTypeSelect) searchTypeSelect.value = '';
+  const themeSelect = document.querySelector("select[name='themeCode']");
+  if (themeSelect) themeSelect.value = '';
+  document.getElementById('start_date').value = '';
+  document.getElementById('end_date').value = '';
+  document.getElementById('period').value = '';
+}
+</script>
+
+</th:block>
+</html>

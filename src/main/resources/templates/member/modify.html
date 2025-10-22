@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layouts/layout}">
+
+<th:block layout:fragment="css">
+<style>
+  /* ===== Color System (Semi-Dark) ===== */
+  :root{
+    --page-bg:#0f172a;                 /* 배경 네이비 */
+    --text:#f1f5f9;                    /* 기본 텍스트 */
+    --muted:#cbd5e1;
+    --card-bg:rgba(255,255,255,.10);   /* 카드 유리 느낌 */
+    --card-br:rgba(148,163,184,.35);
+    --shadow:0 18px 48px rgba(2,6,23,.55);
+    --field-bg:#16223a;
+    --field-br:#4b5a75;
+    --field-br-focus:#7cc0ff;
+    --btn-grad:linear-gradient(135deg,#7dd3fc,#a78bfa);
+    --danger:#ef4444;
+  }
+
+  body{ background:var(--page-bg); color:var(--text); }
+  .text-muted{ color:var(--muted) !important; }
+
+  /* 페이지 타이틀 */
+  h1.text-center{
+    background:var(--btn-grad);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    font-weight:800; letter-spacing:.3px;
+  }
+
+  /* 카드 */
+  .card{
+    background:var(--card-bg) !important;
+    border:1px solid var(--card-br) !important;
+    border-radius:1rem !important;
+    box-shadow:var(--shadow) !important;
+    overflow:hidden;
+  }
+  .card-header{
+    padding:.9rem 1.1rem;
+    background:linear-gradient(135deg, rgba(79,70,229,.20), rgba(6,182,212,.20));
+    border-bottom:1px solid var(--card-br);
+    display:flex; align-items:center; justify-content:space-between; gap:.75rem;
+  }
+  .card-title{
+	margin:0; font-weight:800; letter-spacing:.2px;
+    background:var(--btn-grad);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    font-size: 1.25rem;
+	}
+
+  /* 레이블/텍스트 */
+  label.col-form-label,
+  .form-label{ color:#e2e8f0 !important; font-weight:600; }
+  span[th\\:text]{ color:var(--muted); }
+
+  /* 인풋/셀렉트 */
+  .form-control, .form-select, .input-group-text{
+    background:var(--field-bg) !important;
+    color:var(--text) !important;
+    border:1px solid var(--field-br) !important;
+    box-shadow:none !important;
+  }
+  .form-control::placeholder{ color:#94a3b8; }
+  .form-control:focus, .form-select:focus{
+    border-color:var(--field-br-focus) !important;
+    outline:none !important;
+    box-shadow:0 0 0 .2rem rgba(59,130,246,.15) !important;
+  }
+
+  /* 버튼 */
+  .btn-info{
+    background:var(--btn-grad) !important;
+    border:0 !important; color:#0b1020 !important; font-weight:700;
+  }
+  .btn-info:hover{ filter:brightness(1.05); }
+
+  .btn-default,
+  .btn-outline-primary{
+    background:transparent !important;
+    border:1px solid var(--field-br) !important;
+    color:var(--text) !important;
+  }
+  .btn-default:hover,
+  .btn-outline-primary:hover{
+    border-color:var(--field-br-focus) !important;
+    color:#dbeafe !important;
+  }
+
+  /* 폼 그룹 */
+  .form-group.row.mb-3{ align-items:center; }
+
+  /* 우편번호 레이어 */
+  #layer{
+    background:#ffffff;
+    border:1px solid #d1d5db;
+    border-radius:12px;
+    box-shadow:0 18px 40px rgba(0,0,0,.35);
+  }
+  #btnCloseLayer{ filter: drop-shadow(0 2px 4px rgba(0,0,0,.35)); }
+
+  /* 반응형 */
+  @media (max-width: 576px){
+    .card{ border-radius:.875rem !important; }
+    .card-header{ padding:.9rem 1rem !important; }
+  }
+</style>
+</th:block>
+
+<th:block layout:fragment="content">
+<div class="row mt-3">
+  <div class="col">
+    <div class="card card-info">
+      <div class="card-header">
+        <h3 class="card-title">회원정보수정</h3>
+      </div>
+
+      <form class="form-horizontal" id="modifyForm" action="/member/modify" method="post">
+        <div class="card-body">
+          <div class="form-group row mb-3">
+            <label for="mbsp_id" class="col-sm-2 col-form-label">아이디</label>
+            <div class="col-sm-4">
+              <input type="text" class="form-control" id="mbsp_id" name="mbsp_id" th:value="${memberVO.mbsp_id}" readonly>
+            </div>
+            <label for="mbsp_datesub" class="col-sm-2 col-form-label">가입일</label>
+            <div class="col-sm-4">
+              <span th:text="${#dates.format(memberVO.mbsp_datesub, 'yyyy-MM-dd HH:mm:ss')}"></span>
+            </div>
+          </div>
+
+          <div class="form-group row mb-3">
+            <label for="mbsp_name" class="col-sm-2 col-form-label">이름</label>
+            <div class="col-sm-4">
+              <input type="text" class="form-control" id="mbsp_name" name="mbsp_name" th:value="${memberVO.mbsp_name}">
+            </div>
+            <label for="mbsp_updatedate" class="col-sm-2 col-form-label">수정일</label>
+            <div class="col-sm-4">
+              <span th:text="${#dates.format(memberVO.mbsp_updatedate, 'yyyy-MM-dd HH:mm:ss')}"></span>
+            </div>
+          </div>
+
+          <div class="form-group row mb-3">
+            <label for="mbsp_email" class="col-sm-2 col-form-label">전자우편</label>
+            <div class="col-sm-4">
+              <input type="text" class="form-control" id="mbsp_email" name="mbsp_email" th:value="${memberVO.mbsp_email}">
+            </div> 
+            <label for="mbsp_nick" class="col-sm-2 col-form-label">별명</label>
+            <div class="col-sm-4">
+              <input type="text" class="form-control" id="mbsp_nick" name="mbsp_nick" th:value="${memberVO.mbsp_nick}">
+            </div>                  
+          </div>
+
+          <div class="form-group row mb-3">
+            <label for="mbsp_zipcode" class="col-sm-2 col-form-label">우편번호</label>
+            <div class="col-sm-4">
+              <input type="text" class="form-control" id="sample2_postcode" name="mbsp_zipcode" th:value="${memberVO.mbsp_zipcode}">
+            </div>
+            <div class="col-sm-4">
+              <button type="button" class="btn btn-outline-primary" onclick="sample2_execDaumPostcode()">우편번호</button>
+            </div>
+          </div>
+
+          <div class="form-group row mb-3">
+            <label for="sample2_address" class="col-sm-2 col-form-label">기본주소</label>
+            <div class="col-sm-4">
+              <input type="text" class="form-control" id="sample2_address" name="mbsp_addr" th:value="${memberVO.mbsp_addr}">
+            </div>
+            <label for="sample2_extraAddress" class="col-sm-2 col-form-label">나머지주소</label>
+            <div class="col-sm-4">
+              <input type="text" class="form-control" id="sample2_detailAddress" name="mbsp_deaddr" th:value="${memberVO.mbsp_deaddr}">
+              <input type="hidden" id="sample2_extraAddress" placeholder="참고항목">
+            </div>
+          </div>
+
+          <div class="form-group row mb-3">
+            <label for="mbsp_phone" class="col-sm-2 col-form-label">연락처</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" id="mbsp_phone" name="mbsp_phone" th:value="${memberVO.mbsp_phone}">
+            </div>
+          </div>
+        </div>
+
+        <div class="card-footer text-center mb-3">
+          <button type="button" class="btn btn-info" id="btnModify">저장하기</button>
+          <button type="reset" class="btn btn-default float-right">취소</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div id="layer" style="display:none;position:fixed;overflow:hidden;z-index:1;-webkit-overflow-scrolling:touch;">
+  <img src="//t1.daumcdn.net/postcode/resource/images/close.png" id="btnCloseLayer" style="cursor:pointer;position:absolute;right:-3px;top:-3px;z-index:1" onclick="closeDaumPostcode()" alt="닫기 버튼">
+</div>
+<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+
+<th:block layout:fragment="script2">
+<script>
+    $(document).ready(function() {
+        $("#btnModify").on("click", function() {
+            $("#modifyForm").submit();
+        });
+    });
+
+    var element_layer = document.getElementById('layer');
+    function closeDaumPostcode(){ element_layer.style.display = 'none'; }
+
+    function sample2_execDaumPostcode() {
+        new daum.Postcode({
+            oncomplete: function(data) {
+                var addr = ''; var extraAddr = '';
+                if (data.userSelectedType === 'R') {
+                    addr = data.roadAddress;
+                    if(data.bname !== '' && /[동|로|가]$/g.test(data.bname)){ extraAddr += data.bname; }
+                    if(data.buildingName !== '' && data.apartment === 'Y'){ extraAddr += (extraAddr !== '' ? ', ' + data.buildingName : data.buildingName); }
+                    if(extraAddr !== ''){ extraAddr = ' (' + extraAddr + ')'; }
+                    document.getElementById("sample2_extraAddress").value = extraAddr;
+                } else { document.getElementById("sample2_extraAddress").value = ''; }
+                document.getElementById('sample2_postcode').value = data.zonecode;
+                document.getElementById("sample2_address").value = addr;
+                document.getElementById("sample2_detailAddress").focus();
+                element_layer.style.display = 'none';
+            },
+            width : '100%', height : '100%', maxSuggestItems : 5
+        }).embed(element_layer);
+        element_layer.style.display = 'block';
+        initLayerPosition();
+    }
+
+    function initLayerPosition(){
+        var width=300, height=400, borderWidth=5;
+        element_layer.style.width=width+'px';
+        element_layer.style.height=height+'px';
+        element_layer.style.border=borderWidth+'px solid';
+        element_layer.style.left = (((window.innerWidth||document.documentElement.clientWidth)-width)/2 - borderWidth) + 'px';
+        element_layer.style.top = (((window.innerHeight||document.documentElement.clientHeight)-height)/2 - borderWidth) + 'px';
+    }
+</script>
+</th:block>
+</html>

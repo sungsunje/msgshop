@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.msgshop.admin.product.AdProductImgMapper">
+
+    <!-- 1) 상품 이미지 등록 -->
+    <insert id="insertProductImg" parameterType="com.msgshop.admin.product.ProductImgVO">
+        insert into product_img_tbl(pro_num, img_name, img_folder, is_thumb, sort_order)
+        values(#{pro_num}, #{img_name}, #{img_folder}, #{is_thumb}, #{sort_order})
+    </insert>
+
+    <!-- 2) 상품별 이미지 조회 -->
+    <select id="getProductImages" resultType="com.msgshop.admin.product.ProductImgVO" parameterType="int">
+        select img_id, pro_num, img_name, img_folder, is_thumb, sort_order
+        from product_img_tbl
+        where pro_num = #{pro_num}
+        order by sort_order asc, img_id asc
+    </select>
+
+    <!-- 3) 상품별 이미지 삭제 -->
+    <delete id="deleteProductImagesByProNum" parameterType="int">
+        delete from product_img_tbl
+        where pro_num = #{pro_num}
+    </delete>
+
+</mapper>

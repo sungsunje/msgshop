@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+
+<th:block layout:fragment="content">
+
+  <style>
+    :root{
+      --page-bg:#0f172a; --text:#f1f5f9; --muted:#cbd5e1;
+      --card-bg:rgba(255,255,255,.10); --card-br:rgba(148,163,184,.35);
+      --shadow:0 18px 48px rgba(2,6,23,.55);
+      --btn-grad:linear-gradient(135deg,#7dd3fc,#a78bfa);
+      --chip-bg:rgba(148,163,184,.12); --chip-br:rgba(148,163,184,.35);
+      --danger:#ef4444; --success:#34d399;
+      --focus:#7cc0ff;
+    }
+    body{background:var(--page-bg); color:var(--text);}
+    a, a:hover{ text-decoration:none; }
+
+    .card-glass{ background:var(--card-bg); border:1px solid var(--card-br); box-shadow:var(--shadow); border-radius:16px; overflow:hidden; }
+    .page-header{ display:flex; flex-direction:column; gap:6px; margin:24px 0 16px; position:relative; }
+    .page-title{ margin:0; font-weight:800; letter-spacing:.2px; background:var(--btn-grad); -webkit-background-clip:text; background-clip:text; color:transparent; font-size:2rem; }
+
+    .chip-container{ display:flex; flex-wrap:wrap; gap:6px; margin-top:4px; }
+    .chip{ display:inline-flex; align-items:center; gap:6px; padding:.28rem .6rem; border-radius:999px; background: linear-gradient(135deg, #7dd3fc66, #a78bfa66); border: 1px solid #a78bfa; color: #fff; font-weight: 600; font-size:0.85rem; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3); }
+    .chip span:first-child{ font-size:1rem; }
+
+    .gallery-main{ position:relative; border-bottom:1px solid var(--card-br); }
+    .gallery-main img{ width:100%; height:365px; object-fit:cover; display:block; }
+    .gallery-main::after{ content:""; position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,.35), rgba(0,0,0,0) 50%); pointer-events:none; }
+    .thumbs{ display:flex; gap:8px; padding:10px; overflow:auto; }
+    .thumbs img{ width:78px; height:78px; object-fit:cover; border-radius:10px; border:1px solid var(--card-br); cursor:pointer; transition:transform .15s; }
+    .thumbs img:hover{ transform:scale(1.03); }
+    .thumbs img.selected{ border-color:#7dd3fc; transform:scale(1.05); }
+
+    .price-row{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; font-size:1rem; }
+    .original{ color:#9ca3af; text-decoration:line-through; font-size:.98rem; }
+    .discounted{ color:var(--danger); font-weight:800; font-size:1.4rem; }
+    .save{ color:var(--success); font-weight:700; font-size:.95rem; }
+    .discount-label{ background:var(--danger); color:#fff; font-weight:800; font-size:.85rem; border-radius:999px; padding:.18rem .55rem; margin-left:10px; }
+
+    .btn-grad{ background:var(--btn-grad); color:#0b1020; border:0; font-weight:800; }
+    .btn-outline{ background:transparent; color:var(--text); border:1px solid var(--card-br); }
+    .btn-grad, .btn-outline{ padding:.7rem 1rem; border-radius:12px; display:inline-flex; align-items:center; gap:8px; }
+    .btn-outline:hover{ border-color:var(--focus); }
+
+    .divider{ height:1px; background:var(--card-br); margin:12px 0; border-radius:999px; }
+
+    @media (max-width: 992px){ .gallery-main img{ height:300px; } }
+  </style>
+
+  <div class="container mt-3 mb-4">
+
+    <!-- 타이틀/칩 -->
+    <div class="page-header">
+      <h1 class="page-title h3" th:text="${productVo.pro_name != null ? productVo.pro_name : '상품명 없음'}">업체명</h1>
+
+      <!-- 업체명 바로 아래: 지역/테마/후기 칩 -->
+      <div class="chip-container">
+        <span th:if="${productVo.cate_name != null}" class="chip">
+          <span>🗺️</span>
+          <span th:text="${productVo.cate_name}">지역명</span>
+        </span>
+
+        <span th:each="themeName : ${productVo.themeList}" class="chip">
+          <span>📌</span>
+          <span th:text="${themeName}">테마명</span>
+        </span>
+
+        <span class="chip">
+          <span>💬</span>
+          이용후기 <strong th:text="${productVo.pro_review != null ? productVo.pro_review : 0}">0</strong>건
+        </span>
+      </div>
+    </div>
+
+    <div class="row g-3">
+      <!-- Left: Gallery -->
+      <div class="col-12 col-lg-6">
+        <div class="card-glass">
+          <div class="gallery-main">
+            <img id="mainImage"
+                 th:src="@{'/product/image_display?dateFolderName=' + (${productVo.pro_up_folder}) + '&fileName=' + ${mainImage}}"
+                 th:alt="${productVo.pro_name != null ? productVo.pro_name : '상품 이미지'}">
+          </div>
+
+          <div class="thumbs">
+            <img th:each="img : ${images}"
+                 th:src="@{'/product/image_display?dateFolderName=' + ${img.img_folder} + '&fileName=' + ${img.img_name}}"
+                 th:alt="${productVo.pro_name != null ? productVo.pro_name + ' 이미지' : '이미지'}"
+                 th:classappend="${img.img_name == mainImage} ? 'selected' : ''"
+                 onclick="switchImage(this)">
+            <span th:if="${images == null or #lists.isEmpty(images)}">이미지가 없습니다.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Info -->
+      <div class="col-12 col-lg-6">
+        <div class="card-glass p-3">
+
+          <!-- 대표 요금 -->
+          <div class="price-row" style="align-items:center; gap:10px;">
+            <span style="font-weight:600;">대표 요금</span>
+            <span class="discounted" th:text="${#numbers.formatInteger((productVo.pro_price != null ? productVo.pro_price : 0) - ((productVo.pro_price != null ? productVo.pro_price : 0) * productVo.pro_discount / 100), 3, 'COMMA') + '원'}">77,000원</span>
+            <span class="discount-label"
+                  th:if="${productVo.pro_discount != null and productVo.pro_discount > 0}"
+                  th:text="${productVo.pro_discount + '% OFF'}">30% OFF</span>
+          </div>
+
+          <div class="price-row">
+            <span class="original" th:text="${#numbers.formatInteger(productVo.pro_price != null ? productVo.pro_price : 0, 3, 'COMMA') + '원'}">110,000원</span>
+            <span class="save" th:text="${'(-' + #numbers.formatInteger((productVo.pro_price != null ? productVo.pro_price : 0) * productVo.pro_discount / 100, 3, 'COMMA') + '원 할인)'}">(-33,000원 할인)</span>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- 연락처 박스 -->
+          <div style="margin-bottom:12px;">
+            <label class="form-label fw-bold" style="display:inline-flex; align-items:center; gap:6px; margin-right:12px;">
+			    <span>연락처 :</span>
+			    <span th:text="${productVo.pro_telephone != null ? productVo.pro_telephone : '01000000000'}">01000000000</span>
+			</label>
+            <a class="btn-outline" th:href="${productVo.pro_telephone != null ? 'tel:' + productVo.pro_telephone : '#'}"
+            style="display:inline-flex; align-items:center; gap:4px;">
+              	<span>📞</span>
+    			<span>전화 문의</span>
+            </a>
+          </div>
+
+          <div class="divider"></div>
+          
+        <!-- 주소 -->
+		<div class="mb-3 col-md-12">
+		    <label class="form-label fw-bold" style="display:inline-flex; align-items:center; gap:4px;">
+		    	<span>📍</span>
+    			<span>업체 위치</span>
+		    </label>
+		    <p class="form-control-plaintext" style="color:white;">
+		        <span><span th:text="${productVo.pro_addr}">기본주소</span>,
+		        <span th:text="${productVo.pro_deaddr}">상세주소</span></span>
+		    </p>
+		</div>
+          
+          <div class="divider"></div>
+
+          <!-- 업체 소개 버튼 -->
+		<a class="btn-outline" href="#tab-desc"
+		   onclick="scrollToSection('tab-desc'); return false;" style="width:fit-content; display:inline-flex; align-items:center; gap:4px;">
+			<span>ℹ️</span>
+    		<span>업체 소개</span>
+		</a>
+		
+		<!-- 이용 후기 버튼 -->
+		<a class="btn-outline" href="#tab-reviews"
+		   onclick="scrollToSection('tab-reviews'); return false;" 
+		   style="width:fit-content; display:inline-flex; align-items:center; gap:4px;">
+		  	<span>⭐</span>
+    		<span>이용 후기</span>
+		</a>
+
+      </div>
+    </div>
+  </div>
+
+    <!-- 업체 소개 출력 영역 -->
+    <div id="tab-desc" class="card-glass p-3 mt-4">
+      <h3 style="display:inline-flex; align-items:center; gap:6px;">
+	  	<span>🔖</span>
+		<span th:text="'업체 소개'">업체 소개</span>
+	  </h3>
+      <div th:utext="${productVo.pro_content}">
+        업체 소개 내용이 여기에 표시됩니다.
+      </div>
+    </div>
+    
+    <!-- Right 컬럼 바깥, 페이지 전체 폭 -->
+	<div id="tab-reviews" class="card-glass p-3 mt-4">
+	  <h3 style="display:inline-flex; align-items:center; gap:6px;">
+	  	<span>💬</span>
+		<span th:text="'이용 후기'">이용 후기</span>
+	  </h3>
+	
+	  <!-- 후기 작성 폼 -->
+	  <form id="reviewForm" method="post" th:action="@{/review/add_review}">
+	    <input type="hidden" name="pro_num" th:value="${productVo.pro_num}">
+	    <div class="mb-3">
+	      <label for="reviewerName" class="form-label fw-bold">작성자</label>
+	    </div>
+	    <div class="mb-3">
+	      <label for="reviewContent" class="form-label fw-bold">후기 내용</label>
+	      <textarea class="form-control" id="reviewContent" name="rev_content" rows="4" required></textarea>
+	    </div>
+	    <button type="submit" class="btn btn-grad">후기 작성</button>
+	  </form>
+	
+	  <hr>
+	
+	  	<!-- 후기 리스트 -->
+		<div id="reviewList">
+		  <div th:each="review : ${productVo.reviewList}" class="mb-2 p-2 card-glass">
+		    <!-- 후기 작성자/내용/작성일 -->
+		    <strong th:text="${review.mbsp_id}">작성자</strong>
+		    <p th:text="${review.rev_content}">후기 내용</p>
+		    <small th:text="${#temporals.format(review.rev_date, 'yyyy-MM-dd HH:mm')}">작성일</small>
+		
+		    <!-- 후기별 답변 반복 -->
+		    <div th:each="reply : ${review.replies}" style="margin-left:1rem; margin-top:4px;">
+		      <p>
+		        <b th:text="${reply.manager_id}">관리자</b>:
+		        <span th:text="${reply.reply_text}">답변 내용</span>
+		        <small th:text="${#temporals.format(reply.reply_date, 'yyyy-MM-dd HH:mm')}">답변일</small>
+		      </p>
+		    </div>
+		
+		    <!-- 답변 등록 폼 -->
+			<form th:action="@{/review/add_reply}" method="post" style="margin-top:6px;">
+			    <input type="hidden" name="rev_code" th:value="${review.rev_code}" />
+			    <input type="hidden" name="pro_num" th:value="${productVo.pro_num}" /> <!-- 이 줄 추가 -->
+			    <input type="text" name="reply_text" placeholder="답변 작성" required />
+			    <button type="submit" class="btn btn-grad btn-sm">등록</button>
+			</form>
+
+		  </div>
+		
+		  <span th:if="${#lists.isEmpty(productVo.reviewList)}">작성된 후기가 없습니다.</span>
+		</div>
+	  
+	</div>
+	
+  </div>
+
+  <script th:inline="javascript">
+    function switchImage(el){
+      const src = el.getAttribute('src');
+      const main = document.getElementById('mainImage');
+      if(!src || !main) return;
+      main.setAttribute('src', src);
+      document.querySelectorAll('.thumbs img').forEach(img => img.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+
+    function toggleWish(btn){
+      const active = btn.classList.toggle('is-wished');
+      if(active){
+        btn.style.borderColor = '#f472b6';
+        btn.style.color = '#f472b6';
+      }else{
+        btn.style.borderColor = 'var(--card-br)';
+        btn.style.color = 'var(--text)';
+      }
+    }
+    
+    function scrollToSection(id){
+    	  const target = document.getElementById(id);
+    	  if(!target) return;
+    	  const offset = 100; // 원하는 margin-top 값
+    	  const top = target.getBoundingClientRect().top + window.scrollY - offset;
+    	  window.scrollTo({ top: top, behavior: 'smooth' });
+   	}
+
+  </script>
+
+</th:block>
+</html>

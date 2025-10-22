@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+
+<th:block layout:fragment="content">
+
+  <!-- ====== UI 스타일 ====== -->
+  <style>
+    :root{
+      --page-bg:#0f172a; --text:#f1f5f9; --muted:#cbd5e1;
+      --card-bg:rgba(255,255,255,.10); --card-br:rgba(148,163,184,.35);
+      --shadow:0 18px 48px rgba(2,6,23,.55);
+      --btn-grad:linear-gradient(135deg,#7dd3fc,#a78bfa);
+      --chip-bg:rgba(148,163,184,.12);
+      --chip-br:rgba(148,163,184,.35);
+      --danger:#ef4444;
+    }
+    body{background:var(--page-bg); color:var(--text);}
+    h3{letter-spacing:.2px}
+
+    /* 카드 */
+    .card{
+      background:var(--card-bg) !important;
+      border:1px solid var(--card-br) !important;
+      box-shadow:var(--shadow) !important;
+      border-radius:16px !important;
+      overflow:hidden;
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+      cursor:pointer;
+    }
+    .card:hover{
+      transform: translateY(-4px);
+      box-shadow: 0 22px 60px rgba(2,6,23,.7) !important;
+      border-color: rgba(148,163,184,.55) !important;
+    }
+
+    /* 이미지 */
+    a.pro_info{display:block; position:relative; overflow:hidden; border-bottom:1px solid var(--card-br);}
+    a.pro_info img{transition: transform .6s ease; display:block;}
+    a.pro_info::after{
+      content:""; position:absolute; inset:0;
+      background: linear-gradient(to top, rgba(0,0,0,.45) 0%, rgba(0,0,0,0) 55%);
+      pointer-events:none;
+    }
+    a.pro_info:hover img{transform: scale(1.06);}
+
+    /* 할인 뱃지 */
+    .badge-top{
+      position:absolute; top:10px; left:10px;
+      background: var(--danger);
+      color:#fff; font-weight:800;
+      border-radius:999px; padding:.2rem .6rem; font-size:.8rem;
+      box-shadow:0 8px 22px rgba(0,0,0,.35);
+    }
+
+    /* 타이틀 오버레이 */
+    .title-overlay{
+      position:absolute; left:12px; bottom:10px; right:12px;
+      color:#ecf3ff; font-weight:800; font-size:1.05rem;
+      text-shadow: 0 2px 10px rgba(0,0,0,.35);
+      overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
+      pointer-events:none;
+    }
+
+    /* 본문 */
+    .card-body{display:flex; flex-direction:column; gap:.35rem;}
+    .card-title{
+      margin:0; font-weight:800; letter-spacing:.1px;
+      background:var(--btn-grad);
+      -webkit-background-clip:text; background-clip:text; color:transparent;
+      font-size:1.05rem;
+    }
+
+    /* 가격 영역 */
+    .label{color:#dbeafe; font-weight:700; margin-right:.35rem;}
+    .original-price{font-size:.95rem; color:#9ca3af; text-decoration: line-through; margin-right:.5rem;}
+    .discounted-price{font-weight:800; font-size:1.15rem; color:var(--danger); margin-right:.35rem;}
+    .price-alone{font-weight:800; font-size:1.15rem; color:#ffffff;}
+    .discount{font-weight:800; color:var(--danger);}
+
+    /* 칩 */
+    .chip{
+      display:inline-flex; 
+      align-items:center; 
+      gap:.5rem;
+      padding:.5rem 1rem;       /* 크기 키움 */
+      border-radius:999px;
+      background:var(--chip-bg); 
+      border:1px solid var(--chip-br);
+      color:var(--text); 
+      font-size:0.95rem;        /* 글자 키움 */
+      font-weight:500;
+    }
+
+    .chip span:first-child{font-size:1.1rem;} /* 이모지 조금 키움 */
+
+    /* 칩 컨테이너 */
+    .chip-container{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;                 /* 칩 간 간격 */
+      margin-bottom:15px;
+    }
+    
+    /* 상단 지역/테마 출력 스타일 */
+	.chip-selected {
+	  background: linear-gradient(135deg, #7dd3fc66, #a78bfa66); /* 반투명 그라디언트 */
+	  border: 1px solid #a78bfa;
+	  color: #fff;
+	  font-weight: 600;
+	  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+	  margin-top: 30px;
+	}
+	.chip-selected span:first-child {
+	  font-size: 1.2rem;
+	}
+
+    .text-body-secondary{color:var(--muted) !important;}
+  </style>
+
+  <!-- ====== 선택된 지역/테마 칩 ====== -->
+  <div class="chip-container">
+    <!-- 지역 칩 -->
+    <span th:each="region : ${selectedRegions}" class="chip chip-selected">
+      <span>🗺️</span>
+      <span th:text="${region.cate_name}">선택된 지역</span>
+    </span>
+
+    <!-- 테마 칩 -->
+    <span th:each="themeName : ${selectedThemes}" class="chip chip-selected">
+      <span>📌</span>
+      <span th:text="${themeName}">선택된 테마</span>
+    </span>
+  </div>
+
+  <!-- 숨은 폼 -->
+  <form id="frm_pro_info" method="get" action="/product/pro_info">
+    <input type="hidden" name="cate_name" id="cate_name">
+    <input type="hidden" name="pro_num" id="pro_num">
+  </form>
+
+  <!-- 카드 리스트 -->
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4"> <!-- 간격 조금 키움 -->
+    <div class="col" th:each="productVo : ${pro_list}">
+      <div class="card shadow-sm h-100">
+        <a href="#" th:data-pro_num="${productVo.pro_num}" class="pro_info">
+          <img style="width:100%; height:220px; object-fit:cover;"
+     th:src="@{'/product/image_display'(dateFolderName=${productVo.pro_up_folder}, fileName='s_' + ${productVo.pro_img})}"
+     th:alt="${productVo.pro_name}">
+
+          <span class="badge-top"
+                th:if="${productVo.pro_discount != null and productVo.pro_discount > 0}"
+                th:text="${productVo.pro_discount + '% OFF'}">10% OFF</span>
+        </a>
+        <div class="card-body">
+          <h5 class="card-title" th:text="${productVo.pro_name}">업체명</h5>
+          <p class="card-text mb-1">
+            <span class="label">대표요금</span>
+            <span th:if="${productVo.pro_discount != null and productVo.pro_discount > 0}">
+              <span class="original-price"
+                    th:text="${#numbers.formatInteger(productVo.pro_price, 3, 'COMMA') + '원'}">0원</span>
+              <span class="discounted-price"
+                    th:text="${#numbers.formatInteger(productVo.pro_price - (productVo.pro_price * productVo.pro_discount / 100), 3, 'COMMA') + '원'}">0원</span>
+              <span class="discount" th:text="${'· ' + productVo.pro_discount + '% 할인'}">· 10% 할인</span>
+            </span>
+            <span th:if="${productVo.pro_discount == null or productVo.pro_discount == 0}">
+              <span class="price-alone"
+                    th:text="${#numbers.formatInteger(productVo.pro_price, 3, 'COMMA') + '원'}">0원</span>
+            </span>
+          </p>
+          <!-- 지역 및 테마 칩 -->
+<div class="mb-2">
+    <!-- 첫 줄: 지역명 -->
+    <span class="chip">
+        <span>🗺️</span>
+        <span th:text="${productVo.cate_name}">지역명</span>
+    </span>
+</div>
+
+<!-- 둘째 줄: 테마명 반복 -->
+<div class="d-flex flex-wrap gap-2">
+    <span th:each="themeName : ${productVo.themeList}" class="chip">
+        <span>📌</span>
+        <span th:text="${themeName}">테마명</span>
+    </span>
+</div>
+
+          <p class="card-text mt-auto">
+            <small class="text-body-secondary">이용후기:
+              <span th:text="${productVo.pro_review}">0</span>건
+            </small>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</th:block>
+
+<th:block layout:fragment="script2">
+<script th:inline="javascript">
+  $(".card").on("click", function(e) {
+    e.preventDefault();
+    let pro_num = $(this).find("a.pro_info").data("pro_num");
+    $("#pro_num").val(pro_num);
+    $("#cate_name").val('[[${cate_name}]]');
+    $("#frm_pro_info").submit();
+  });
+</script>
+</th:block>
+
+</html>

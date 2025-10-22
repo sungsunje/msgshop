@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.msgshop.admin.product.AdProductMapper">
+
+    <!-- =================== 상품 등록 =================== -->
+    <insert id="pro_insert" parameterType="com.msgshop.admin.product.ProductVO"
+            useGeneratedKeys="true" keyProperty="pro_num">
+        insert into product_tbl
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            cate_code, pro_name, pro_price, pro_discount, pro_telephone, pro_content,
+            pro_zipcode, pro_addr, pro_deaddr, pro_extra_addr,
+            <if test="pro_up_folder != null">pro_up_folder,</if>
+            <if test="pro_img != null">pro_img,</if>
+            pro_buy
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            #{cate_code,jdbcType=SMALLINT},
+            #{pro_name},
+            #{pro_price},
+            #{pro_discount},
+            #{pro_telephone},
+            #{pro_content},
+            #{pro_zipcode},
+            #{pro_addr},
+            #{pro_deaddr},
+            #{pro_extra_addr},
+            <if test="pro_up_folder != null">#{pro_up_folder},</if>
+            <if test="pro_img != null">#{pro_img},</if>
+            #{pro_buy}
+        </trim>
+    </insert>
+
+    <!-- =================== 상품 수정 =================== -->
+    <update id="pro_edit_ok" parameterType="com.msgshop.admin.product.ProductVO">
+        update product_tbl
+        set cate_code = #{cate_code},
+            pro_name = #{pro_name},
+            pro_price = #{pro_price},
+            pro_discount = #{pro_discount},
+            pro_telephone = #{pro_telephone},
+            pro_content = #{pro_content},
+            pro_zipcode = #{pro_zipcode},
+            pro_addr = #{pro_addr},
+            pro_deaddr = #{pro_deaddr},
+            pro_extra_addr = #{pro_extra_addr},
+            pro_up_folder = #{pro_up_folder},
+            pro_img = #{pro_img},
+            pro_buy = #{pro_buy}
+        where pro_num = #{pro_num}
+    </update>
+    
+    <!-- =================== 상품 수정 폼 조회 =================== -->
+	<select id="pro_edit_form" parameterType="int" resultType="com.msgshop.admin.product.ProductVO">
+	    SELECT 
+	        pro_num,
+	        cate_code,
+	        pro_name,
+	        pro_price,
+	        pro_discount,
+	        pro_telephone,
+	        pro_content,
+	        pro_zipcode,
+	        pro_addr,
+	        pro_deaddr,
+	        pro_extra_addr,
+	        pro_up_folder,
+	        pro_img,
+	        pro_buy,
+	        pro_date
+	    FROM product_tbl
+	    WHERE pro_num = #{pro_num}
+	</select>
+ 
+    <!-- =================== 일반 이미지 관련 =================== -->
+    <insert id="insertProductImg" parameterType="com.msgshop.admin.product.ProductImgVO">
+        insert into product_img_tbl(pro_num, img_name, img_folder, is_thumb, sort_order)
+        values(#{pro_num}, #{img_name}, #{img_folder}, #{is_thumb}, #{sort_order})
+    </insert>
+
+    <select id="getProductImages" resultType="com.msgshop.admin.product.ProductImgVO" parameterType="int">
+        select img_id, pro_num, img_name, img_folder, is_thumb, sort_order
+        from product_img_tbl
+        where pro_num = #{pro_num}
+        order by sort_order asc, img_id asc
+    </select>
+
+    <delete id="deleteProductImagesByProNum" parameterType="int">
+        delete from product_img_tbl
+        where pro_num = #{pro_num}
+    </delete>
+
+    <!-- =================== 테마 관련 =================== -->
+    <select id="getThemeList" resultType="com.msgshop.admin.product.ThemeVO">
+        select theme_code, theme_name, theme_order
+        from theme_tbl
+        order by theme_order asc
+    </select>
+
+    <insert id="insertProductThemes" parameterType="java.util.HashMap">
+        insert into product_theme_tbl(pro_num, theme_code)
+        values
+        <foreach collection="themeList" item="themeCode" separator=",">
+            (#{pro_num}, #{themeCode})
+        </foreach>
+    </insert>
+    
+    <!-- =================== 상품 테마명 조회 =================== -->
+	<select id="getProductThemeNames" parameterType="int" resultType="string">
+	    SELECT t.theme_name
+	    FROM product_theme_tbl pt
+	    JOIN theme_tbl t ON pt.theme_code = t.theme_code
+	    WHERE pt.pro_num = #{pro_num}
+	    ORDER BY t.theme_order ASC
+	</select> 
+	
+	<!-- =================== 상품 테마 코드 조회 =================== -->
+	<select id="getProductThemeCodes" parameterType="int" resultType="int">
+	    SELECT theme_code
+	    FROM product_theme_tbl
+	    WHERE pro_num = #{pro_num}
+	</select>
+
+    <!-- =================== 상품 목록 조회 =================== -->
+	<select id="getProductListByCateAndTheme" resultType="com.msgshop.admin.product.ProductVO">
+	    SELECT *
+	    FROM PRODUCT_TBL p
+	    WHERE 1=1
+	
+	    <!-- 검색어 필터 -->
+	    <if test="cri.searchType != null">
+		    <choose>
+		        <when test="cri.searchType == 'n'.toString()">
+		            AND p.pro_name LIKE CONCAT('%', #{cri.keyword}, '%')
+		        </when>
+		        <when test="cri.searchType == 'p'.toString()">
+		            AND p.pro_telephone LIKE CONCAT('%', #{cri.keyword}, '%')
+		        </when>
+		        <when test="cri.searchType == 'a'.toString()">
+		            AND p.pro_addr LIKE CONCAT('%', #{cri.keyword}, '%')
+		        </when>
+		        <otherwise>
+		            AND p.pro_name LIKE CONCAT('%', #{cri.keyword}, '%')
+		        </otherwise>
+		    </choose>
+		</if>
+	
+	    <!-- 테마 필터 -->
+	    <if test="themeList != null and themeList.size() > 0">
+	        AND p.pro_num IN (
+	            SELECT pt.pro_num
+	            FROM PRODUCT_THEME_TBL pt
+	            WHERE pt.theme_code IN
+	            <foreach collection="themeList" item="theme" open="(" separator="," close=")">
+	                #{theme}
+	            </foreach>
+	        )
+	    </if>
+	
+	    <!-- 날짜 필터 (등록일 pro_date 기준) -->
+	    <if test="period != null and period != ''">
+	        <choose>
+	            <when test="period.equals('today')">
+	                AND DATE(p.pro_date) = CURDATE()
+	            </when>
+	            <when test="period.equals('3days')">
+	                AND p.pro_date >= DATE_SUB(CURDATE(), INTERVAL 3 DAY)
+	            </when>
+	            <when test="period.equals('week')">
+	                AND p.pro_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+	            </when>
+	            <when test="period.equals('month')">
+	                AND p.pro_date >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH)
+	            </when>
+	            <when test="period.equals('3months')">
+	                AND p.pro_date >= DATE_SUB(CURDATE(), INTERVAL 3 MONTH)
+	            </when>
+	            <when test="period.equals('all')">
+	                <!-- 전체는 조건 없음 -->
+	            </when>
+	        </choose>
+	    </if>
+	
+	    <!-- start_date ~ end_date 지정 -->
+	    <if test="start_date != null and start_date != ''">
+	        AND DATE(p.pro_date) &gt;= #{start_date}
+	    </if>
+	    <if test="end_date != null and end_date != ''">
+	        AND DATE(p.pro_date) &lt;= #{end_date}
+	    </if>
+	
+	    ORDER BY p.pro_num DESC
+	
+	    LIMIT #{cri.pageStart}, #{cri.perPageNum}
+	</select>
+	
+	<!-- =================== 상품 개수 조회 =================== -->
+	<select id="getCountProductListByCateAndTheme" resultType="int">
+	    SELECT COUNT(*)
+	    FROM PRODUCT_TBL p
+	    WHERE 1=1
+	
+	    <!-- 검색어 필터 -->
+	    <if test="cri.searchType != null">
+		    <choose>
+		        <when test="cri.searchType == 'n'.toString()">
+		            AND p.pro_name LIKE CONCAT('%', #{cri.keyword}, '%')
+		        </when>
+		        <when test="cri.searchType == 'p'.toString()">
+		            AND p.pro_telephone LIKE CONCAT('%', #{cri.keyword}, '%')
+		        </when>
+		        <when test="cri.searchType == 'a'.toString()">
+		            AND p.pro_addr LIKE CONCAT('%', #{cri.keyword}, '%')
+		        </when>
+		        <otherwise>
+		            AND p.pro_name LIKE CONCAT('%', #{cri.keyword}, '%')
+		        </otherwise>
+		    </choose>
+		</if>
+	
+	    <!-- 테마 필터 -->
+	    <if test="themeList != null and themeList.size() > 0">
+	        AND p.pro_num IN (
+	            SELECT pt.pro_num
+	            FROM PRODUCT_THEME_TBL pt
+	            WHERE pt.theme_code IN
+	            <foreach collection="themeList" item="theme" open="(" separator="," close=")">
+	                #{theme}
+	            </foreach>
+	        )
+	    </if>
+	
+	    <!-- 날짜 필터 (등록일 pro_date 기준) -->
+	    <if test="period != null and period != ''">
+	        <choose>
+	            <when test="period.equals('today')">
+	                AND DATE(p.pro_date) = CURDATE()
+	            </when>
+	            <when test="period.equals('3days')">
+	                AND p.pro_date >= DATE_SUB(CURDATE(), INTERVAL 3 DAY)
+	            </when>
+	            <when test="period.equals('week')">
+	                AND p.pro_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+	            </when>
+	            <when test="period.equals('month')">
+	                AND p.pro_date >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH)
+	            </when>
+	            <when test="period.equals('3months')">
+	                AND p.pro_date >= DATE_SUB(CURDATE(), INTERVAL 3 MONTH)
+	            </when>
+	            <when test="period.equals('all')">
+	                <!-- 전체는 조건 없음 -->
+	            </when>
+	        </choose>
+	    </if>
+	
+	    <!-- start_date ~ end_date 지정 -->
+	    <if test="start_date != null and start_date != ''">
+	        AND DATE(p.pro_date) &gt;= #{start_date}
+	    </if>
+	    <if test="end_date != null and end_date != ''">
+	        AND DATE(p.pro_date) &lt;= #{end_date}
+	    </if>
+	</select>
+	
+	<!-- 기존 업로드 폴더 조회 -->
+	<select id="getProUpFolderByProNum" resultType="String" parameterType="int">
+	    SELECT pro_up_folder
+	    FROM product_tbl
+	    WHERE pro_num = #{pro_num}
+	</select>
+	
+	<!-- 기존 대표 이미지 조회 -->
+	<select id="getProImgByProNum" resultType="String" parameterType="int">
+	    SELECT pro_img
+	    FROM product_tbl
+	    WHERE pro_num = #{pro_num}
+	</select>
+	
+	<update id="pro_update" parameterType="com.msgshop.admin.product.ProductVO">
+	    UPDATE product_tbl
+	    <set>
+	        <if test="pro_name != null and pro_name != ''">pro_name = #{pro_name},</if>
+	        <if test="pro_up_folder != null and pro_up_folder != ''">pro_up_folder = #{pro_up_folder},</if>
+	        <if test="pro_img != null and pro_img != ''">pro_img = #{pro_img},</if>
+	        <if test="cate_code != null and cate_code != 0">cate_code = #{cate_code},</if>
+	        <if test="pro_price != null and pro_price != 0">pro_price = #{pro_price},</if>
+	        <if test="pro_discount != null and pro_discount != 0">pro_discount = #{pro_discount},</if>
+	        <if test="pro_telephone != null and pro_telephone != ''">pro_telephone = #{pro_telephone},</if>
+	        <if test="pro_zipcode != null and pro_zipcode != ''">pro_zipcode = #{pro_zipcode},</if>
+	        <if test="pro_addr != null and pro_addr != ''">pro_addr = #{pro_addr},</if>
+	        <if test="pro_deaddr != null and pro_deaddr != ''">pro_deaddr = #{pro_deaddr},</if>
+	        <if test="pro_extra_addr != null and pro_extra_addr != ''">pro_extra_addr = #{pro_extra_addr},</if>
+	        <if test="pro_content != null and pro_content != ''">pro_content = #{pro_content},</if>
+	        pro_buy = #{pro_buy}
+	    </set>
+	    WHERE pro_num = #{pro_num}
+	</update>
+	
+	<!-- delete from product_tbl where pro_num in (1, 2, 3) -->
+	 <delete id="pro_sel_delete_2">
+	 	delete from 
+	 			product_tbl
+	 		where 
+	 			pro_num in
+	 	<foreach collection="pro_num_arr" item="item" open="("  separator="," close=")" >
+	 		#{item}
+	 	</foreach>
+	 </delete>
+	 
+	 <delete id="pro_sel_delete_3">
+	 	delete from 
+	 			product_tbl
+	 		where 
+	 			pro_name = #{pro_name}
+	 		and
+	 			pro_num in
+	 	<foreach collection="pro_num_arr" item="item" open="("  separator="," close=")" >
+	 		#{item}
+	 	</foreach>
+	 </delete>
+	 
+	 <delete id="pro_delete" parameterType="Integer">
+	 	delete from 
+	 		product_tbl
+	 	where 
+			pro_num = #{pro_num}		
+	 </delete>
+	 
+	 <delete id="deleteProductThemes" parameterType="int">
+	    DELETE FROM product_theme_tbl
+	    WHERE pro_num = #{pro_num}
+	 </delete>
+
+</mapper>

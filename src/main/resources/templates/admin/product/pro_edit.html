@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/layouts/ad_layout}">
+
+<th:block layout:fragment="content">
+  <div class="container-fluid px-4 py-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-10">
+        <div class="card shadow-lg border-0 rounded-3">
+          <div class="card-header bg-primary text-white">
+            <h3 class="card-title mb-0">업체 수정</h3>
+            <small class="text-white ml-3">※ 수정하지 않으면 기존 값은 유지됩니다.</small>
+          </div>
+
+          <form action="/admin/product/pro_edit_ok" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="pro_num" th:value="${product.pro_num}">
+            <div class="card-body p-4">
+
+              <!-- 업체명 -->
+              <div class="mb-3 col-md-6">
+                <label for="pro_name" class="form-label fw-bold">업체명</label>
+                <input type="text" class="form-control" id="pro_name" name="pro_name" placeholder="업체명을 입력하세요"
+                       th:value="${product.pro_name}">
+              </div>
+              
+              <!-- 기존 썸네일 이미지 출력 -->
+			<div class="mb-3">
+			  <label class="form-label fw-bold">기존 썸네일</label><br>
+			  <img th:if="${product.pro_img != null}"
+			       th:src="@{'/admin/product/image_display'(dateFolderName=${product.pro_up_folder}, fileName=${'s_' + product.pro_img})}"
+			       style="width:120px; height:120px; object-fit:cover; border-radius:8px; border:1px solid #ddd; margin-bottom:10px;">
+			  <p th:if="${product.pro_img == null}" class="text-muted">등록된 썸네일이 없습니다.</p>
+			
+			  <input type="hidden" name="pro_up_folder" th:value="${product.pro_up_folder}" />
+			  <input type="hidden" name="pro_img" th:value="${product.pro_img}" />
+			</div>
+
+              <!-- 썸네일 업로드 -->
+              <div class="row mb-3 align-items-center">
+                <div class="col-md-6">
+                  <label for="thumbnail_upload" class="form-label fw-bold">썸네일 이미지 (1장)</label>
+                  <input type="file" class="form-control" id="thumbnail_upload" name="pro_thumbnail_upload" accept="image/*">
+                </div>
+                <div class="col-md-6">
+				  <label class="form-label fw-bold d-block">썸네일 미리보기</label>
+				  <div id="thumbnailPreview">
+				    <img th:if="${product.pro_img != null}"
+				         th:src="@{'/admin/product/image_display'(dateFolderName=${product.pro_up_folder}, fileName=${'s_' + product.pro_img})}"
+				         style="width:120px; height:120px; object-fit:cover; border:2px solid #007bff; border-radius:8px;">
+				  </div>
+				</div>
+              </div>
+
+              <!-- 상세 이미지 업로드 -->
+              <div class="row mb-3 align-items-center">
+                <div class="col-md-6">
+                  <label for="detail_upload" class="form-label fw-bold">상세 이미지 (여러 장)</label>
+                  <input type="file" class="form-control" id="detail_upload" name="pro_img_uploads" multiple accept="image/*">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-bold d-block">상세 이미지 미리보기</label>
+                  <div id="detailPreview" style="display:flex; gap:10px; flex-wrap: wrap;">
+                    <img th:each="img : ${product.imgList}"
+				     th:src="@{'/admin/product/image_display'(dateFolderName=${img.img_folder}, fileName=${'s_' + img.img_name})}"
+				     style="width:100px; height:100px; object-fit:cover; border:1px solid #ccc; border-radius:6px; margin:4px;">
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 2차/3차 카테고리 선택 -->
+			<input type="hidden" id="cate_first_code" value="1">
+			<input type="hidden" name="second_cate_code" id="selectedSecondCode" th:value="${product.second_cate_code}">
+			<input type="hidden" name="third_cate_code" id="selectedThirdCode" th:value="${product.third_cate_code}">
+			
+			<div class="row mb-3 align-items-end">
+			    <div class="col-md-4">
+			        <label class="form-label fw-bold">1차 지역</label>
+			        <select class="form-select w-100" id="btn_secondCategory">
+			            <option value="">1차 지역 선택</option>
+			        </select>
+			    </div>
+			    <div class="col-md-4">
+			        <label class="form-label fw-bold">2차 지역</label>
+			        <select class="form-select w-100" id="btn_thirdCategory">
+			            <option value="">2차 지역 선택</option>
+			        </select>
+			    </div>
+			    <div class="col-md-4">
+			        <label class="form-label fw-bold">지역 선택</label>
+			        <input type="text" class="form-control" id="selectedThirdCategory" readonly placeholder="">
+			    </div>
+			</div>
+
+              <!-- 요금, 할인율 -->
+              <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                  <label for="pro_price" class="form-label fw-bold">대표 요금 (원)</label>
+                  <input type="text" class="form-control" id="pro_price" name="pro_price" placeholder="대표 요금 입력"
+                         th:value="${product.pro_price}">
+                </div>
+                <div class="col-md-6">
+                  <label for="pro_discount" class="form-label fw-bold">할인율 (%)</label>
+                  <input type="text" class="form-control" id="pro_discount" name="pro_discount" placeholder="할인율 입력"
+                         th:value="${product.pro_discount}">
+                </div>
+              </div>
+
+              <!-- 테마 체크박스 -->
+              <div class="mb-3">
+                <div class="d-flex align-items-center mb-2">
+                    <label class="form-label fw-bold mb-0" style="margin-right: 20px;">테마 선택</label>
+                    <input type="text" class="form-control" id="selectedThemes" readonly placeholder="선택된 테마"
+                           th:value="${product.themeNames != null ? #strings.listJoin(product.themeNames, ', ') : ''}"
+                           style="flex: 1; min-width: 300px;">
+                </div>
+                <div th:each="theme : ${themeList}" class="form-check form-check-inline mt-2">
+                    <input class="form-check-input theme-checkbox" type="checkbox" 
+                           th:id="${'theme' + theme.theme_code}" 
+                           name="themeCodes" 
+                           th:value="${theme.theme_code}"
+                           th:checked="${product.themeCodes != null and product.themeCodes.contains(theme.theme_code)}">
+                    <label class="form-check-label" th:for="${'theme' + theme.theme_code}" th:text="${theme.theme_name}"></label>
+                </div>
+              </div>
+
+              <!-- 연락처 -->
+              <div class="mb-3 col-md-6">
+                <label for="pro_telephone" class="form-label fw-bold">연락처 (ex.01012345678)</label>
+                <input type="text" class="form-control" id="pro_telephone" name="pro_telephone" placeholder="숫자만 입력"
+                       th:value="${product.pro_telephone}">
+              </div>
+
+              <!-- 주소 -->
+              <div class="mb-3">
+                <label class="form-label fw-semibold">주소</label>
+                <div class="input-group mb-2">
+                  <input type="text" class="form-control" id="sample2_postcode" name="pro_zipcode" placeholder="우편번호" readonly
+                         th:value="${product.pro_zipcode}">
+                  <button type="button" class="btn" id="btnAddrSearch" 
+                         style="background-color: #3375cc; border-color: #3375cc; color: #fff;">우편번호 검색</button>
+                </div>
+                <div class="mb-2">
+                  <input type="text" class="form-control" id="sample2_address" name="pro_addr" placeholder="기본주소" readonly
+                         th:value="${product.pro_addr}">
+                </div>
+                <div>
+                  <input type="text" class="form-control" id="sample2_detailAddress" name="pro_deaddr" placeholder="상세주소"
+                         th:value="${product.pro_deaddr}">
+                  <input type="hidden" id="sample2_extraAddress" name="pro_extra_addr" th:value="${product.pro_extra_addr}">
+                </div>
+              </div>
+
+              <!-- 업체 소개 -->
+              <div class="mb-3">
+                <label for="pro_content" class="form-label fw-bold">업체 소개</label>
+                <textarea class="form-control" id="pro_content" name="pro_content" rows="6" placeholder="업체소개 입력"
+                          th:text="${product.pro_content}"></textarea>
+              </div>
+
+              <!-- 게시 여부 -->
+              <div class="mb-4">
+                <label class="form-label fw-bold d-block">게시 여부</label>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="pro_buy" id="pro_buy1" value="Y" th:checked="${product.pro_buy == 'Y'}">
+                  <label class="form-check-label" for="pro_buy1">게시함</label>
+                </div>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="pro_buy" id="pro_buy2" value="N" th:checked="${product.pro_buy == 'N'}">
+                  <label class="form-check-label" for="pro_buy2">게시안함</label>
+                </div>
+              </div>
+
+            </div>
+
+			<input type="hidden" name="cate_code" th:value="${product.cate_code}" />
+			
+            <div class="card-footer text-end">
+              <button type="submit" class="btn btn-primary px-4">수정하기</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- CKEditor & jQuery -->
+<script src="/ckeditor/ckeditor.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script th:inline="javascript">
+$(document).ready(function () {
+
+    // CKEditor 설정
+    CKEDITOR.replace("pro_content", {
+        resize_enabled: false,
+        enterMode: CKEDITOR.ENTER_BR,
+        shiftEnterMode: CKEDITOR.ENTER_P,
+        toolbarCanCollapse: true,
+        removePlugins: "elementspath",
+        filebrowserUploadUrl: '/admin/product/imageupload',
+        height: 700
+    });
+
+    // 썸네일 미리보기
+    const thumbnailSrc = $("#thumbnailPreview img").attr("src");
+    if(thumbnailSrc) $("#thumbnailPreview").html(`<img src="${thumbnailSrc}" style="width:120px; height:120px; object-fit:cover; border:2px solid #007bff; border-radius:8px;">`);
+
+    // 상세 이미지 미리보기
+    function updateDetailPreview() {
+        const $container = $("#detailPreview");
+        $container.find("img").each(function() {
+            $(this).css({"width":"100px","height":"100px","object-fit":"cover","border":"1px solid #ccc","border-radius":"6px","margin":"4px"});
+        });
+    }
+    updateDetailPreview();
+
+    // 테마 체크박스 선택 표시
+    function updateSelectedThemes() {
+        const selected = [];
+        $(".theme-checkbox:checked").each(function() {
+            selected.push($(this).next("label").text());
+        });
+        $("#selectedThemes").val(selected.join(", "));
+    }
+    $(".theme-checkbox").on("change", updateSelectedThemes);
+    updateSelectedThemes();
+
+    // ------------------ 2차/3차 카테고리 로딩 ------------------
+    const $second = $("#btn_secondCategory");
+    const $third = $("#btn_thirdCategory");
+
+    const selectedSecondCode = $("#selectedSecondCode").val() || '';
+    const selectedThirdCode  = $("#selectedThirdCode").val() || '';
+
+    // 2차 카테고리 AJAX 로딩
+    $.getJSON("/admin/product/category/secondcategory/1", function(secondList) {
+        $second.empty().append("<option value=''>2차 지역 선택</option>");
+        $.each(secondList, function(i, cat) {
+            const isSelected = String(cat.cate_code) === String(selectedSecondCode) ? 'selected' : '';
+            $second.append(`<option value='${cat.cate_code}' ${isSelected}>${cat.cate_name}</option>`);
+        });
+
+        // 기존 2차 선택값이 있으면 3차 카테고리도 AJAX 로딩
+        if (selectedSecondCode) {
+            $.getJSON("/admin/product/category/thirdcategory/" + selectedSecondCode, function(thirdList) {
+                $third.empty().append("<option value=''>3차 지역 선택</option>");
+                $.each(thirdList, function(i, cat) {
+                    const isSelected = String(cat.cate_code) === String(selectedThirdCode) ? 'selected' : '';
+                    $third.append(`<option value='${cat.cate_code}' ${isSelected}>${cat.cate_name}</option>`);
+                });
+
+                // 3차 선택값 있으면 텍스트 필드에 표시
+                if (selectedThirdCode) {
+                    const selectedText = $third.find("option:selected").text();
+                    $("#selectedThirdCategory").val(selectedText);
+                }
+            });
+        }
+    });
+
+    // 2차 변경 시 3차 카테고리 로딩
+    $second.on("change", function() {
+	    const secondCode = $(this).val();
+	    $("#selectedSecondCode").val(secondCode);  // hidden 필드 업데이트
+	    $third.empty().append("<option value=''>3차 지역 선택</option>");
+	    $("#selectedThirdCode").val('');
+	    if (!secondCode) return;
+	
+	    $.getJSON("/admin/product/category/thirdcategory/" + secondCode, function(thirdList) {
+	        $.each(thirdList, function(i, cat) {
+	            $third.append(`<option value='${cat.cate_code}'>${cat.cate_name}</option>`);
+	        });
+	    });
+	});
+	
+ 	// 3차 변경 시 텍스트 필드 업데이트
+	$third.on("change", function() {
+	    const thirdCode = $(this).val();
+	    $("#selectedThirdCategory").val($(this).find("option:selected").text());
+	    $("#selectedThirdCode").val(thirdCode);  // hidden 필드 업데이트
+	});
+
+    // Daum 우편번호 검색
+    $('#btnAddrSearch').on('click', function() {
+        new daum.Postcode({
+            oncomplete: function(data) {
+                $('#sample2_postcode').val(data.zonecode);
+                $('#sample2_address').val(data.address);
+                $('#sample2_extraAddress').val(data.buildingName || '');
+                $('#sample2_detailAddress').focus();
+            }
+        }).open();
+    });
+
+});
+</script>
+
+</th:block>
+</html>

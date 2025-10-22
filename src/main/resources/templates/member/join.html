@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+   xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+   layout:decorate="~{layouts/layout}">
+
+<th:block layout:fragment="css">
+<style>
+  /* ===== 팔레트 ===== */
+  :root{
+    --page-bg:#0f172a;                  /* 네이비 계열 배경 */
+    --text:#f1f5f9;                     /* 거의 화이트 텍스트 */
+    --muted:#cbd5e1;
+
+    --card-bg:rgba(255,255,255,.10);    /* 유리 느낌 카드 */
+    --card-br:rgba(148,163,184,.35);
+    --shadow:0 18px 48px rgba(2,6,23,.55);
+
+    --field-bg:#16223a;                 /* 인풋 바탕 */
+    --field-br:#4b5a75;
+    --field-br-focus:#7cc0ff;
+
+    --btn-grad:linear-gradient(135deg,#7dd3fc,#a78bfa); /* 하늘→라일락 */
+    --danger:#ef4444;
+  }
+
+  /* 페이지/텍스트 */
+  body{ background:var(--page-bg); color:var(--text); }
+  .text-muted{ color:var(--muted) !important; }
+  .text-danger{ color:var(--danger) !important; }
+
+  /* 제목 */
+  h2.text-center.fw-bold{
+    background:var(--btn-grad);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+
+  /* 카드 */
+  .card{
+    background:var(--card-bg) !important;
+    border:1px solid var(--card-br) !important;
+    box-shadow:var(--shadow) !important;
+  }
+  .card-header{
+    background:linear-gradient(135deg, rgba(79,70,229,.25), rgba(6,182,212,.25)) !important;
+    border-bottom:1px solid var(--card-br) !important;
+    color:var(--text) !important;
+  }
+
+  /* 라벨 */
+  label.form-label, 
+  label.form-check-label { color:#e2e8f0 !important; }
+
+  /* 인풋/셀렉트/구분자 */
+  .form-control, .form-select, .input-group-text{
+    background:var(--field-bg) !important;
+    color:var(--text) !important;
+    border:1px solid var(--field-br) !important;
+    box-shadow:none !important;
+  }
+  .form-control::placeholder{ color:#94a3b8; }
+  .form-control:focus, .form-select:focus{
+    border-color:var(--field-br-focus) !important;
+    outline:none !important;
+    box-shadow:0 0 0 .2rem rgba(59,130,246,.15) !important;
+  }
+
+  /* 체크박스 */
+  .form-check-input{
+    background-color:var(--field-bg) !important;
+    border:1px solid var(--field-br) !important;
+    transform:scale(1.2);
+    margin-right:8px;
+  }
+  .form-check-input:checked{
+    background-color:#3b82f6 !important;
+    border-color:#3b82f6 !important;
+  }
+
+  /* 버튼 — 기존 인라인색 덮어쓰기 (ID 지정) */
+  #btnIDCheck,
+  #btnAddrSearch,
+  #btnMailAuthcode,
+  #btnConfirmAuth,
+  #btnJoin{
+    background:var(--btn-grad) !important;
+    border:0 !important;
+    color:#0b1020 !important;
+  }
+  #btnIDCheck:hover,
+  #btnAddrSearch:hover,
+  #btnMailAuthcode:hover,
+  #btnConfirmAuth:hover,
+  #btnJoin:hover{
+    filter:brightness(1.05);
+  }
+
+  /* 취소 버튼(아웃라인을 고스트 톤으로) */
+  .btn.btn-outline-secondary{
+    background:transparent !important;
+    border:1px solid var(--field-br) !important;
+    color:var(--text) !important;
+  }
+  .btn.btn-outline-secondary:hover{
+    border-color:var(--field-br-focus) !important;
+    color:#dbeafe !important;
+  }
+
+  /* 우편번호 레이어 */
+  #layer{
+    background:#fff; border:1px solid #ccc; border-radius:8px;
+    box-shadow:0 8px 30px rgba(0,0,0,.35);
+  }
+  #btnCloseLayer{
+    background:var(--danger); color:#fff; border:none;
+    border-radius:6px; padding:4px 10px; cursor:pointer;
+    position:absolute; top:6px; right:6px; z-index:1000;
+  }
+</style>
+</th:block>
+
+
+<th:block layout:fragment="content">
+<div class="container mt-5">
+  <h2 class="text-center mb-5 fw-bold" style="color: #3375cc;">회원가입</h2>
+
+  <div class="row justify-content-center">
+    <div class="col-lg-7 col-md-9">
+      <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-header text-white rounded-top-4" 
+             style="background: linear-gradient(135deg, #898989, #d9d9d9);">
+          <h5 class="mb-0 fw-semibold">개인정보 입력</h5>
+        </div>
+
+        <form class="p-4" id="joinForm" action="/member/join" method="post">
+          <!-- 아이디 -->
+          <div class="mb-3">
+            <label for="mbsp_id" class="form-label fw-semibold">회원 아이디</label>
+            <div class="input-group">
+              <input type="text" class="form-control rounded-start" id="mbsp_id" name="mbsp_id" placeholder="아이디 입력">
+              <button type="button" class="btn" id="btnIDCheck" 
+                     style="background-color: #3375cc; border-color: #3375cc; color: #fff;">중복확인</button>
+            </div>
+            <small id="idCheckMsg" class="text-danger"></small>
+          </div>
+
+          <!-- 비밀번호 -->
+          <div class="mb-3">
+            <label for="mbsp_password" class="form-label fw-semibold">비밀번호</label>
+            <input type="password" class="form-control" id="mbsp_password" name="mbsp_password" placeholder="비밀번호 입력">
+          </div>
+
+          <div class="mb-3">
+            <label for="mbsp_password_2" class="form-label fw-semibold">비밀번호 확인</label>
+            <input type="password" class="form-control" id="mbsp_password_2" placeholder="비밀번호 확인">
+          </div>
+
+          <!-- 이름 -->
+          <div class="mb-3">
+            <label for="mbsp_name" class="form-label fw-semibold">이름</label>
+            <input type="text" class="form-control" id="mbsp_name" name="mbsp_name" placeholder="이름 입력">
+          </div>
+
+          <!-- 닉네임 -->
+          <div class="mb-3">
+            <label for="mbsp_nick" class="form-label fw-semibold">닉네임</label>
+            <input type="text" class="form-control" id="mbsp_nick" name="mbsp_nick" placeholder="닉네임 입력">
+          </div>
+
+          <!-- 연락처 -->
+          <div class="mb-3">
+            <label for="mbsp_phone" class="form-label fw-semibold">연락처</label>
+            <div class="input-group">
+              <input type="text" class="form-control text-center" id="mbsp_phone1" maxlength="3" placeholder="010">
+              <span class="input-group-text">-</span>
+              <input type="text" class="form-control text-center" id="mbsp_phone2" maxlength="4" placeholder="1234">
+              <span class="input-group-text">-</span>
+              <input type="text" class="form-control text-center" id="mbsp_phone3" maxlength="4" placeholder="5678">
+            </div>
+            <input type="hidden" id="mbsp_phone" name="mbsp_phone">
+          </div>
+
+          <!-- 주소 -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold">주소</label>
+            <div class="input-group mb-2">
+              <input type="text" class="form-control" id="sample2_postcode" name="mbsp_zipcode" placeholder="우편번호" readonly>
+              <button type="button" class="btn" id="btnAddrSearch" 
+                     style="background-color: #3375cc; border-color: #3375cc; color: #fff;">우편번호 검색</button>
+            </div>
+            <div class="mb-2">
+              <input type="text" class="form-control" id="sample2_address" name="mbsp_addr" placeholder="기본주소" readonly>
+            </div>
+            <div>
+              <input type="text" class="form-control" id="sample2_detailAddress" name="mbsp_deaddr" placeholder="상세주소">
+              <input type="hidden" id="sample2_extraAddress">
+            </div>
+          </div>
+
+          <!-- 이메일 -->
+          <div class="mb-3">
+            <label for="mbsp_email" class="form-label fw-semibold">이메일</label>
+            <div class="input-group mb-2">
+              <input type="text" class="form-control" id="email_id" placeholder="example">
+              <span class="input-group-text">@</span>
+              <input type="text" class="form-control" id="email_domain" placeholder="domain">
+              <select class="form-select" id="email_domain_select" style="max-width: 180px;">
+                <option value="">직접입력</option>
+                <option value="gmail.com">gmail.com</option>
+                <option value="naver.com">naver.com</option>
+                <option value="daum.net">daum.net</option>
+                <option value="nate.com">nate.com</option>
+                <option value="kakao.com">kakao.com</option>
+              </select>
+              <button type="button" class="btn" id="btnMailAuthcode" 
+                      style="background-color: #3375cc; border-color: #3375cc; color: #fff; max-width: 120px;">
+                인증요청
+              </button>
+            </div>
+            <input type="hidden" id="mbsp_email" name="mbsp_email">
+
+            <div class="input-group">
+              <input type="text" class="form-control" id="u_authcode" placeholder="인증코드 입력하세요.">
+              <button type="button" class="btn" id="btnConfirmAuth" 
+                      style="background-color: #3375cc; border-color: #3375cc; color: #fff; max-width: 120px;">
+                인증확인
+              </button>
+            </div>
+          </div>
+
+          <!-- 이메일 수신 동의 -->
+          <div class="mb-3 form-check">
+            <input class="form-check-input" type="checkbox" id="mbsp_receive" name="mbsp_receive" value="Y"
+                   style="transform: scale(1.4); margin-right: 8px;">
+            <label class="form-check-label fw-semibold" for="mbsp_receive">
+              이메일 수신 동의
+            </label>
+          </div>
+
+          <div class="text-center mt-4">
+            <button type="button" class="btn text-white px-5 py-2 fw-semibold shadow-sm" 
+                    id="btnJoin" style="background-color: #3375cc; border-color: #3375cc;">
+              회원가입
+            </button>
+            <button type="reset" class="btn btn-outline-secondary px-5 py-2 ms-2">취소</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Daum 우편번호 레이어 + 닫기 버튼 -->
+<div id="layer" style="display:none; position:fixed; z-index:999; background:#fff; border:1px solid #ccc; border-radius:6px; box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+    <button id="btnCloseLayer" 
+            style="position:absolute; top:5px; right:5px; z-index:1000; background:#ff5c5c; color:#fff; border:none; padding:2px 8px; border-radius:4px; cursor:pointer;">
+        X
+    </button>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+
+<script>
+$(document).ready(function(){
+    let id_check = false;
+    let email_auth = false;
+
+    function updateEmail() {
+        const id = $("#email_id").val().trim();
+        const domain = $("#email_domain").val().trim();
+        $("#mbsp_email").val(id && domain ? id + "@" + domain : "");
+    }
+    $("#email_id, #email_domain").on("input", updateEmail);
+    $("#email_domain_select").on("change", function(){
+        $("#email_domain").val(this.value);
+        updateEmail();
+    });
+
+    function clickHighlight(btn){
+        const $btn = $(btn);
+        const originalBg = $btn.css("background-color");
+        const originalBorder = $btn.css("border-color");
+        const originalColor = $btn.css("color");
+
+        $btn.css({"background-color":"#53a7e7","border-color":"#53a7e7","color":"#fff"});
+        setTimeout(()=>{$btn.css({"background-color":originalBg,"border-color":originalBorder,"color":originalColor});}, 200);
+    }
+
+    $("#btnIDCheck").on("click", function(){
+        clickHighlight(this);
+        let mbsp_id = $("#mbsp_id").val().trim();
+        if(!mbsp_id){ alert("아이디를 입력하세요"); return; }
+        $.ajax({
+            url:'/member/idCheck',
+            type:'get',
+            data:{mbsp_id: mbsp_id},
+            dataType:'text',
+            success:function(result){
+                if(result=="yes"){ alert("사용가능"); id_check=true; }
+                else { alert("사용불가능"); $("#mbsp_id").val("").focus(); }
+            }
+        });
+    });
+
+    $("#btnAddrSearch").on("click", function(){
+        clickHighlight(this);
+        sample2_execDaumPostcode();
+    });
+
+    $("#btnMailAuthcode").on("click", function(){
+        clickHighlight(this);
+        if(!$("#mbsp_email").val()){ alert("메일을 입력하세요"); return; }
+        $.ajax({
+            url:'/email/authcode',
+            type:'get',
+            data:{receiverMail: $("#mbsp_email").val(), type:"authcode"},
+            dataType:'text',
+            success:function(result){
+                if(result=="success"){ alert("메일로 인증코드가 발급되었습니다."); }
+            }
+        });
+    });
+
+    $("#btnConfirmAuth").on("click", function(){
+        clickHighlight(this);
+        if(!$("#u_authcode").val()){ alert("인증코드를 입력하세요"); return; }
+        $.ajax({
+            url:'/email/confirm_authcode',
+            type:'get',
+            data:{authcode: $("#u_authcode").val()},
+            dataType:'text',
+            success:function(result){
+                if(result=="success"){ alert("인증이 확인되었습니다."); email_auth=true; }
+                else if(result=="fail"){ alert("인증코드가 틀립니다."); }
+            }
+        });
+    });
+
+    $("#btnJoin").on("click", function(){
+        const p1=$("#mbsp_phone1").val().trim(), p2=$("#mbsp_phone2").val().trim(), p3=$("#mbsp_phone3").val().trim();
+        if(p1 && p2 && p3){ $("#mbsp_phone").val(`${p1}-${p2}-${p3}`); }
+        updateEmail();
+        if(!id_check){ alert("아이디 중복확인 바랍니다."); return; }
+        if(!email_auth){ alert("메일 인증확인 바랍니다."); return; }
+        $("#joinForm").submit();
+    });
+
+    // 레이어 닫기 버튼
+    $("#btnCloseLayer").on("click", function(){
+        element_layer.style.display = 'none';
+    });
+});
+
+// Daum 우편번호 레이어
+var element_layer = document.getElementById('layer');
+function sample2_execDaumPostcode(){
+    new daum.Postcode({
+        oncomplete:function(data){
+            let addr='', extraAddr='';
+            if(data.userSelectedType==='R'){ addr=data.roadAddress; } else { addr=data.jibunAddress; }
+            if(data.userSelectedType==='R'){
+                if(data.bname!=='' && /[동|로|가]$/g.test(data.bname)){ extraAddr+=data.bname; }
+                if(data.buildingName!=='' && data.apartment==='Y'){ extraAddr+=(extraAddr!==''?', '+data.buildingName:data.buildingName); }
+                if(extraAddr!==''){ extraAddr=' ('+extraAddr+')'; }
+                document.getElementById("sample2_extraAddress").value=extraAddr;
+            } else { document.getElementById("sample2_extraAddress").value=''; }
+            document.getElementById('sample2_postcode').value=data.zonecode;
+            document.getElementById("sample2_address").value=addr;
+            document.getElementById("sample2_detailAddress").focus();
+            element_layer.style.display='none';
+        }, width:'100%', height:'100%', maxSuggestItems:5
+    }).embed(element_layer);
+
+    element_layer.style.display='block';
+    initLayerPosition();
+}
+
+function initLayerPosition(){
+    let width=400, height=450, borderWidth=5;
+    element_layer.style.width = width+'px';
+    element_layer.style.height = height+'px';
+    element_layer.style.border = borderWidth+'px solid';
+    element_layer.style.left = (((window.innerWidth||document.documentElement.clientWidth)-width)/2-borderWidth)+'px';
+    element_layer.style.top = (((window.innerHeight||document.documentElement.clientHeight)-height)/2-borderWidth)+'px';
+}
+</script>
+
+</th:block>
+</html>

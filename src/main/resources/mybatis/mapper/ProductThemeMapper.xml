@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.msgshop.product.theme.ProductThemeMapper">
+
+    <!-- 특정 상품 테마 조회 -->
+    <select id="selectThemesByProduct" resultType="string" parameterType="int">
+        SELECT t.THEME_NAME
+        FROM PRODUCT_THEME_TBL pt
+        JOIN THEME_TBL t ON pt.THEME_CODE = t.THEME_CODE
+        WHERE pt.PRO_NUM = #{proNum}
+    </select>
+
+    <!-- 모든 테마 조회 -->
+    <select id="selectAllThemes" resultType="string">
+        SELECT THEME_NAME
+        FROM THEME_TBL
+        ORDER BY THEME_ORDER
+    </select>
+
+    <!-- 상품-테마 연결 추가 -->
+    <insert id="insertProductTheme">
+        INSERT INTO PRODUCT_THEME_TBL(PRO_NUM, THEME_CODE)
+        VALUES(#{proNum}, #{themeCode})
+    </insert>
+
+    <!-- 상품-테마 연결 삭제 -->
+    <delete id="deleteProductTheme">
+        DELETE FROM PRODUCT_THEME_TBL
+        WHERE PRO_NUM = #{proNum} AND THEME_CODE = #{themeCode}
+    </delete>
+
+</mapper>

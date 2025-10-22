@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.msgshop.admin.partner.stats.PartnerStatsMapper">
+
+    <!-- 결과 매핑 -->
+    <resultMap id="PartnerStatsMap" type="com.msgshop.admin.partner.stats.PartnerStatsVO">
+        <id property="statId" column="stat_id"/>
+        <result property="proNum" column="pro_num"/>
+        <result property="viewCount" column="view_count"/>
+        <result property="phoneInquiryCount" column="phone_inquiry_count"/>
+        <result property="statDate" column="stat_date"/>
+        <result property="proName" column="pro_name"/> <!-- 상품명 매핑 -->
+    </resultMap>
+
+    <!-- =================== CRUD =================== -->
+
+    <select id="findAll" resultMap="PartnerStatsMap">
+        SELECT s.*, p.pro_name
+        FROM partner_stats s
+        LEFT JOIN product_tbl p ON s.pro_num = p.pro_num
+    </select>
+
+    <select id="findById" parameterType="int" resultMap="PartnerStatsMap">
+        SELECT s.*, p.pro_name
+        FROM partner_stats s
+        LEFT JOIN product_tbl p ON s.pro_num = p.pro_num
+        WHERE s.stat_id = #{statId}
+    </select>
+
+    <!-- 상품 번호로 통계 조회 -->
+    <select id="findByProductId" parameterType="int" resultMap="PartnerStatsMap">
+        SELECT s.*, p.pro_name
+        FROM partner_stats s
+        LEFT JOIN product_tbl p ON s.pro_num = p.pro_num
+        WHERE s.pro_num = #{proNum}
+    </select>
+
+    <insert id="insert" parameterType="com.msgshop.admin.partner.stats.PartnerStatsVO" useGeneratedKeys="true" keyProperty="statId">
+        INSERT INTO partner_stats (pro_num, view_count, phone_inquiry_count, stat_date)
+        VALUES (#{proNum}, #{viewCount}, #{phoneInquiryCount}, #{statDate})
+    </insert>
+
+    <update id="update" parameterType="com.msgshop.admin.partner.stats.PartnerStatsVO">
+        UPDATE partner_stats
+        SET view_count = #{viewCount},
+            phone_inquiry_count = #{phoneInquiryCount},
+            stat_date = #{statDate}
+        WHERE stat_id = #{statId}
+    </update>
+
+    <delete id="delete" parameterType="int">
+        DELETE FROM partner_stats WHERE stat_id = #{statId}
+    </delete>
+
+    <!-- =================== 통계 관련 =================== -->
+
+    <select id="sumViewCount" resultType="int">
+        SELECT COALESCE(SUM(view_count), 0) FROM partner_stats
+    </select>
+
+    <select id="sumPhoneInquiry" resultType="int">
+        SELECT COALESCE(SUM(phone_inquiry_count), 0) FROM partner_stats
+    </select>
+
+    <!-- 특정 상품 + 날짜 범위 통계 조회 -->
+    <select id="selectByProductAndDate" resultMap="PartnerStatsMap"
+	        parameterType="map">
+	    SELECT 
+		  s.stat_id AS stat_id,
+		  s.pro_num AS pro_num,
+		  s.view_count AS view_count,
+		  s.phone_inquiry_count AS phone_inquiry_count,
+		  s.stat_date AS stat_date,
+		  p.pro_name AS pro_name
+		FROM partner_stats s
+		LEFT JOIN product_tbl p ON s.pro_num = p.pro_num
+		WHERE s.stat_date BETWEEN #{startDate} AND #{endDate}
+		<if test="proNum != null">
+		    AND s.pro_num = #{proNum}
+		</if>
+		ORDER BY s.stat_date ASC
+	</select>
+	
+	<select id="findProNumByName" parameterType="string" resultType="int">
+	    SELECT pro_num
+	    FROM product_tbl
+	    WHERE pro_name = #{proName}
+	    LIMIT 1
+	</select>
+
+
+</mapper>

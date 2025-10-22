@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.msgshop.admin.review.AdReviewMapper">
+
+    <!-- ✅ 상품 + 리뷰 + 이미지 + 답변까지 한번에 가져오는 쿼리 -->
+    <select id="review_listWithProduct" resultMap="ReviewWithProductAndRepliesMap">
+        SELECT 
+            rt.rev_code,
+            rt.mbsp_id,
+            rt.pro_num,
+            rt.rev_content,
+            rt.rev_rate,
+            rt.rev_date,
+            pt.pro_name,
+            pt.pro_up_folder,
+            pt.pro_img,
+            rrt.reply_id,
+            rrt.manager_id,
+            rrt.reply_text,
+            rrt.reply_date
+        FROM review_tbl rt
+        LEFT JOIN product_tbl pt ON rt.pro_num = pt.pro_num
+        LEFT JOIN review_replies_tbl rrt ON rt.rev_code = rrt.rev_code
+        WHERE 1=1
+            <include refid="search"/>
+        <if test="cri.startDate != null">
+            AND rt.rev_date &gt;= #{cri.startDate}
+        </if>
+        <if test="cri.endDate != null">
+            AND rt.rev_date &lt;= #{cri.endDate}
+        </if>
+        ORDER BY rt.rev_code DESC
+        LIMIT #{cri.pageStart}, #{cri.perPageNum} <!-- ✅ 여기 수정: startRow → pageStart -->
+    </select>
+
+    <!-- ✅ ResultMap 설정 (이미지 포함) -->
+    <resultMap id="ReviewWithProductAndRepliesMap" type="com.msgshop.review.ReviewVO">
+        <!-- Review 기본 정보 -->
+        <id property="rev_code" column="rev_code"/>
+        <result property="mbsp_id" column="mbsp_id"/>
+        <result property="pro_num" column="pro_num"/>
+        <result property="rev_content" column="rev_content"/>
+        <result property="rev_rate" column="rev_rate"/>
+        <result property="rev_date" column="rev_date"/>
+
+        <!-- ✅ Product 정보 포함 (이미지 경로 포함됨) -->
+        <association property="product" javaType="com.msgshop.admin.product.ProductVO">
+            <result property="pro_name" column="pro_name"/>
+            <result property="pro_up_folder" column="pro_up_folder"/>
+            <result property="pro_img" column="pro_img"/>
+        </association>
+
+        <!-- ✅ Reply 정보 (관리자 답변) -->
+        <collection property="replies" ofType="com.msgshop.review.ReviewReply">
+            <id property="reply_id" column="reply_id"/>
+            <result property="manager_id" column="manager_id"/>
+            <result property="reply_text" column="reply_text"/>
+            <result property="reply_date" column="reply_date"/>
+        </collection>
+    </resultMap>
+
+    <!-- ✅ 게시글 개수 (paging) -->
+    <select id="review_count" resultType="int">
+        SELECT 
+            COUNT(*)
+        FROM 
+            review_tbl rt
+        LEFT JOIN
+            product_tbl pt ON rt.pro_num = pt.pro_num
+        WHERE 1=1
+            <include refid="search"/>
+    </select>
+
+    <!-- ✅ 검색 조건 매핑 -->
+    <sql id="search">
+        <if test="cri.searchType != null and cri.keyword != null and cri.keyword != ''">
+            <choose>
+                <when test="cri.searchType == '업체명'">
+                    AND pt.pro_name LIKE CONCAT('%', #{cri.keyword}, '%')
+                </when>
+                <when test="cri.searchType == '작성자ID'">
+                    AND rt.mbsp_id = #{cri.keyword}
+                </when>
+                <otherwise>
+                    AND (pt.pro_name LIKE CONCAT('%', #{cri.keyword}, '%')
+                    OR rt.mbsp_id LIKE CONCAT('%', #{cri.keyword}, '%'))
+                </otherwise>
+            </choose>
+        </if>
+        <if test="rev_content != null and rev_content != ''">
+            AND rt.rev_content LIKE CONCAT('%', #{rev_content}, '%')
+        </if>
+    </sql>
+
+    <select id="reply_info" resultType="com.msgshop.review.ReviewReply">
+        SELECT reply_id, rev_code, manager_id, reply_text, reply_date
+        FROM review_replies_tbl
+        WHERE reply_id = #{reply_id}
+    </select>
+
+    <insert id="reply_insert" parameterType="com.msgshop.review.ReviewReply">
+        INSERT INTO review_replies_tbl (rev_code, manager_id, reply_text)
+        VALUES (#{rev_code}, #{manager_id}, #{reply_text})
+    </insert>
+
+    <update id="reply_modify">
+        UPDATE review_replies_tbl
+        SET reply_text = #{reply_text}, reply_date = NOW()
+        WHERE reply_id = #{reply_id}
+    </update>
+
+    <delete id="reply_delete">
+        DELETE FROM review_replies_tbl
+        WHERE reply_id = #{reply_id}
+    </delete>
+
+</mapper>

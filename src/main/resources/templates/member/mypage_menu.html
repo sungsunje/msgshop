@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<th:block th:fragment="menu">
+
+  <style>
+    :root{
+      --page-bg:#0f172a;
+      --text:#f1f5f9;
+      --muted:#cbd5e1;
+
+      --card-bg:rgba(255,255,255,.10);
+      --card-br:rgba(148,163,184,.35);
+      --shadow:0 18px 48px rgba(2,6,23,.55);
+
+      --btn-grad:linear-gradient(135deg,#7dd3fc,#a78bfa);
+    }
+
+    body{ background:var(--page-bg); color:var(--text); }
+
+    .mp-card{
+      background:var(--card-bg);
+      border:1px solid var(--card-br);
+      border-radius:16px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .mp-header{
+      display:flex; align-items:center; gap:.6rem;
+      padding:.95rem 1.1rem;
+      background: linear-gradient(135deg, rgba(125,211,252,.18), rgba(167,139,250,.18));
+      border-bottom:1px solid var(--card-br);
+      color:var(--text);
+    }
+    .mp-title{
+      margin:0; font-weight:800;
+      background:var(--btn-grad);
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+      font-size:1.05rem;
+    }
+    .mp-icon{width:22px;height:22px;flex:0 0 22px;color:var(--text)}
+
+    .mp-list{
+      list-style:none;
+      margin:0; padding:.45rem;
+      display:flex; flex-direction:column; gap:.2rem;
+    }
+    .mp-item{list-style:none}
+    .mp-link{
+      display:flex; align-items:center; gap:.65rem;
+      text-decoration:none; padding:.7rem .9rem; border-radius:12px;
+      color:var(--text);
+      transition: transform .12s, box-shadow .12s, background .12s;
+    }
+    .mp-link:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(2,6,23,.35);
+      background: rgba(125,211,252,.10);
+    }
+    .mp-right{ margin-left:auto; color:var(--muted); font-size:.82rem; }
+    .mp-divider{
+      height:1px; background:var(--card-br); margin:.35rem .6rem;
+      border-radius:999px;
+    }
+  </style>
+
+  <div class="mp-card" role="navigation" aria-label="마이페이지 메뉴">
+    <div class="mp-header">
+      <svg class="mp-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="g-mp" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#7dd3fc"/><stop offset="100%" stop-color="#a78bfa"/>
+          </linearGradient>
+        </defs>
+        <circle cx="12" cy="12" r="10" fill="url(#g-mp)"/>
+        <path d="M8 12h8M12 8v8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+      <h3 class="mp-title">My Page</h3>
+    </div>
+
+      <li class="mp-item">
+        <a class="mp-link" href="/member/pwchange">
+          <svg class="mp-icon" viewBox="0 0 24 24"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="4" y="10" width="16" height="10" rx="2" stroke="currentColor" stroke-width="1.6" fill="none"/><circle cx="12" cy="15" r="1.8" fill="currentColor"/></svg>
+          <span>비밀번호 변경</span>
+        </a>
+      </li>
+
+      <li class="mp-divider"></li>
+      
+      <li class="mp-item">
+        <a class="mp-link" href="/member/bookmarks">
+          <svg class="mp-icon" viewBox="0 0 24 24"><path d="M7 4h10a1 1 0 0 1 1 1v15l-6-3-6 3V5a1 1 0 0 1 1-1z" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+          <span>즐겨찾기</span>
+        </a>
+      </li>
+
+      <li class="mp-item">
+        <a class="mp-link" href="/order/review_manage">
+          <svg class="mp-icon" viewBox="0 0 24 24"><path d="M4 5h16v12H8l-4 4V5z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 9h8M8 12h6" stroke="currentColor" stroke-width="1.6"/></svg>
+          <span>리뷰관리</span>
+        </a>
+      </li>
+
+      <li class="mp-divider"></li>
+
+      <li class="mp-item">
+        <a class="mp-link" href="/logout" th:href="@{/logout}">
+          <svg class="mp-icon" viewBox="0 0 24 24"><path d="M10 7V5a2 2 0 0 1 2-2h6v18h-6a2 2 0 0 1-2-2v-2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M14 12H4m0 0l3-3m-3 3l3 3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+          <span>로그아웃</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+
+</th:block>
+</html>
+

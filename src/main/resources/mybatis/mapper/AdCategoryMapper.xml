@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.msgshop.admin.category.AdCategoryMapper">
+
+    <!-- 1차 카테고리 목록 -->
+    <select id="getFirstCategoryList" resultType="com.msgshop.admin.category.CategoryVO">
+        SELECT cate_code, cate_prtcode, cate_name
+        FROM category_tbl
+        WHERE cate_prtcode IS NULL
+    </select>
+
+    <!-- 2차 카테고리 목록 -->
+    <select id="getSecondCategoryList" parameterType="int" resultType="com.msgshop.admin.category.CategoryVO">
+        SELECT cate_code, cate_prtcode, cate_name
+        FROM category_tbl
+        WHERE cate_prtcode = #{cate_prt_code}
+    </select>
+
+    <!-- 3차 카테고리 목록 -->
+    <select id="getThirdCategoryList" parameterType="int" resultType="com.msgshop.admin.category.CategoryVO">
+        SELECT cate_code, cate_prtcode, cate_name
+        FROM category_tbl
+        WHERE cate_prtcode = #{cate_prt_code}
+    </select>
+
+    <!-- 상품수정 폼에서 사용할 선택한 1차카테고리 정보 -->
+    <select id="getFirstCategoryBySecondCategory" parameterType="int" resultType="com.msgshop.admin.category.CategoryVO">
+        SELECT cate_code, cate_prtcode, cate_name
+        FROM category_tbl
+        WHERE cate_code = #{secondCategory}
+    </select>
+
+    <!-- 카테고리 코드로 cate_name 조회 -->
+    <select id="getCateNameByCode" parameterType="int" resultType="String">
+        SELECT cate_name
+        FROM category_tbl
+        WHERE cate_code = #{cateCode}
+    </select>
+
+    <!-- 테마 전체 조회 -->
+    <select id="getThemeList" resultType="com.msgshop.admin.product.ThemeVO">
+	    SELECT 
+	        THEME_CODE AS theme_code,
+	        THEME_NAME AS theme_name,
+	        THEME_ORDER AS theme_order
+	    FROM THEME_TBL
+	    ORDER BY THEME_ORDER
+	</select>
+
+	<select id="getCategoryByCode" parameterType="int" resultType="com.msgshop.admin.category.CategoryVO">
+	    SELECT *
+	    FROM CATEGORY_TBL
+	    WHERE CATE_CODE = #{cate_code}
+	</select>
+	
+	<!-- 3차 카테고리 코드로 부모 2차 코드 조회 -->
+	<select id="getParentCodeByThirdCode" resultType="java.lang.Integer" parameterType="int">
+	    SELECT cate_prtcode
+	    FROM category_tbl
+	    WHERE cate_code = #{thirdCateCode}
+	</select>
+
+</mapper>

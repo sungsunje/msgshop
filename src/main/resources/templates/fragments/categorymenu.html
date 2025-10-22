@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<th:block th:fragment="category">
+
+<div class="cat-wrap">
+
+  <!-- 상단 버튼 -->
+  <div class="top-buttons">
+    <button id="regionBtn" class="top-btn">지역 검색</button>
+    <button id="subRegionBtn" class="top-btn">상세 지역 검색</button>
+    <button id="themeBtn" class="top-btn">테마 검색</button>
+  </div>
+
+  <div class="category-row">
+    <!-- 지역 목록 -->
+    <div class="category-col">
+      <div class="subchips-vertical hidden" id="regionBox" aria-label="지역 목록">
+        <a href="#" class="subchip" th:each="sub : ${pro_list}" 
+           th:data-cate_code="${sub.cate_code}" 
+           th:text="${sub.cate_name}"></a>
+      </div>
+    </div>
+
+    <!-- 상세지역 (하위 카테고리) -->
+    <div class="category-col">
+      <div class="subchips-vertical hidden" id="subRegionBox">
+        <div class="subchips-vertical" id="thirdCategory_menu"></div>
+      </div>
+    </div>
+
+    <!-- 테마 목록 -->
+    <div class="category-col">
+      <div class="subchips-vertical hidden" id="themeBox" aria-label="테마 목록">
+        <a href="#" class="subchip" th:each="theme : ${theme_list}" 
+           th:data-theme_code="${theme.theme_code}" 
+           th:text="${theme.theme_name}"></a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<style>
+.cat-wrap { padding: 1rem; background: rgba(17,24,39,.55); border-radius: 1rem; }
+.top-buttons { display: flex; gap: 1rem; margin-bottom: 1rem; }
+.top-btn { width: 200px; padding: 0.8rem; font-weight: bold; background: #1c2c50; color: #dbeafe; border: 1px solid #243043; border-radius: 0.8rem; cursor: pointer; transition: all .15s; text-align: center; }
+.top-btn.active { background: #3b82f6; color: #fff; border-color: #3b82f6; }
+
+/* 가로 정렬 */
+.category-row { display: flex; gap: 1rem; }
+.category-col { display: flex; flex-direction: column; gap: 0.5rem; width: 200px; }
+
+/* 세로 스크롤 목록 */
+.subchips-vertical { display: flex; flex-direction: column; gap: 0.5rem; max-height: 500px; overflow-y: auto; background: #1c2c50; padding: 0.5rem; border-radius: 0.6rem; }
+.subchip { padding: 0.5rem; border-radius: 0.6rem; color: #dbeafe; border: 1px solid #243043; background: #243043; cursor: pointer; text-align: center; transition: all 0.15s; }
+.subchip:hover, .subchip.active { background: #3b82f6; color: #fff; border-color: #3b82f6; }
+
+.hidden { display: none; }
+</style>
+
+<script>
+$(function () {
+  const $regionBox = $("#regionBox");
+  const $subRegionBox = $("#subRegionBox");
+  const $third = $("#thirdCategory_menu");
+  const $themeBox = $("#themeBox");
+
+  // 상단 버튼 클릭
+  $("#regionBtn").click(function(){
+    $(this).toggleClass("active");
+    $regionBox.toggleClass("hidden");
+  });
+  $("#subRegionBtn").click(function(){
+    $(this).toggleClass("active");
+    $subRegionBox.toggleClass("hidden");
+  });
+  $("#themeBtn").click(function(){
+    $(this).toggleClass("active");
+    $themeBox.toggleClass("hidden");
+  });
+
+  // 지역 목록 클릭 -> 상세지역 표시
+  $regionBox.on("click", ".subchip", function(e){
+    e.preventDefault();
+    const $a = $(this);
+    const wasActive = $a.hasClass("active");
+
+    $regionBox.find(".subchip").removeClass("active");
+    if(!wasActive) $a.addClass("active");
+
+    const code = $a.data("cate_code");
+    $third.empty();
+    $subRegionBox.addClass("hidden");
+
+    if($a.hasClass("active")){
+      $.ajax({
+        url: '/admin/category/thirdcategory/' + encodeURIComponent(code),
+        type: 'GET',
+        dataType: 'json'
+      }).done(data=>{
+        if(data && data.length){
+          data.forEach(it=>{
+            $third.append(`<a href="#" class="subchip thirdchip" data-cate_code="${it.cate_code}" title="${it.cate_name}">${it.cate_name}</a>`);
+          });
+        }
+        $subRegionBox.removeClass("hidden");
+      });
+    }
+  });
+
+  // 상세지역(3차) 클릭
+  $third.on("click", "a.thirdchip", function(e){
+    e.preventDefault();
+    const cate_code = $(this).data("cate_code");
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.set("cate_code", cate_code);
+    location.href = "/product/pro_list?" + urlParams.toString();
+  });
+
+  // 테마 클릭
+  $themeBox.on("click", ".subchip", function(e){
+    e.preventDefault();
+    const theme_code = $(this).data("theme_code");
+    $themeBox.find(".subchip").removeClass("active");
+    $(this).addClass("active");
+
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.set("theme_code", theme_code);
+    location.href = "/product/pro_list?" + urlParams.toString();
+  });
+});
+</script>
+
+</th:block>
+</html>

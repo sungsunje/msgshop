@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<th:block th:fragment="header">
+<header>
+  <nav class="navbar navbar-expand-md fixed-top modern-nav">
+    <div class="container-fluid">
+      <!-- 브랜드 -->
+     <!-- 브랜드 -->
+<a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="/">
+  <img src="/images/logo.png" alt="MSGSHOP 로고" style="height:32px;">
+</a>
+
+  
+
+      <!-- 토글 -->
+      <button class="navbar-toggler shadow-sm" type="button" data-bs-toggle="collapse" data-bs-target="#navMain" aria-controls="navMain" aria-expanded="false" aria-label="메뉴 열기">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <!-- 메뉴 -->
+      <div class="collapse navbar-collapse" id="navMain">
+        <ul class="navbar-nav me-auto mb-2 mb-md-0 align-items-md-center">
+          <li class="nav-item">
+            <a class="nav-link"
+               th:classappend="${#httpServletRequest != null and #httpServletRequest.requestURI == '/' ? ' active' : ''}"
+               href="/">홈</a>
+          </li>
+
+        <!-- 비로그인 -->
+		<th:block th:if="${session.login_auth == null and session.kakao_login_auth == null}">
+		  <li class="nav-item">
+		    <a class="nav-link"
+		       th:classappend="${#httpServletRequest != null and #httpServletRequest.requestURI.startsWith('/member/login') ? ' active' : ''}"
+		       href="/member/login">로그인</a>
+		  </li>
+		  <li class="nav-item">
+		    <a class="nav-link"
+		       th:classappend="${#httpServletRequest != null and #httpServletRequest.requestURI.startsWith('/member/join') ? ' active' : ''}"
+		       href="/member/join">회원가입</a>
+		  </li>
+		</th:block>
+
+        <!-- 로그인 -->
+		<th:block th:if="${session.login_auth != null or session.kakao_login_auth != null}">
+		  <li class="nav-item">
+		    <a class="nav-link"
+		       th:classappend="${#httpServletRequest != null and #httpServletRequest.requestURI.startsWith('/member/modify') ? ' active' : ''}"
+		       href="/member/modify">정보수정</a>
+		  </li>
+		  <li class="nav-item">
+		    <a class="nav-link"
+		       th:classappend="${#httpServletRequest != null and #httpServletRequest.requestURI.startsWith('/member/pwchange') ? ' active' : ''}"
+		       href="/member/pwchange">비밀번호 변경</a>
+		  </li>
+		
+		  <li class="nav-item"><a class="nav-link" href="/member/logout">로그아웃</a></li>
+		</th:block>
+        </ul>
+
+        <!-- 검색 -->
+        <form class="d-flex nav-search" role="search" method="get" action="/search">
+          <input class="form-control form-control-sm me-2 search-input" name="keyword" type="text" placeholder="검색어를 입력하세요." aria-label="검색">
+          <button class="btn btn-primary btn-sm px-3" type="submit"
+          style="writing-mode: horizontal-tb; line-height: normal; display: inline-flex; flex-direction: row; justify-content: center; align-items: center; white-space: nowrap;"
+          >검색</button>
+        </form>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<!-- 스타일: 프로젝트 CSS로 옮겨도 됩니다 -->
+<style>
+  :root{
+    /* 다크 베이스 */
+    --nav-bg: #0b1020;               /* 최상단 배경 */
+    --nav-glass: rgba(17, 24, 39, .65);
+    --nav-br: rgba(99, 102, 241, .25);
+    --nav-shadow: 0 14px 34px rgba(0,0,0,.55);
+
+    --nav-link: #cbd5e1;             /* 일반 링크 */
+    --nav-link-hover: #93c5fd;       /* 호버 텍스트 */
+    --nav-active-grad: linear-gradient(135deg,#4f46e5,#06b6d4); /* 활성 배경 */
+    --nav-active-tx: #0b1020;        /* 활성 텍스트(딥 블루에 대비) */
+  }
+
+  .modern-nav{
+    background: var(--nav-glass);
+    backdrop-filter: blur(10px) saturate(130%);
+    border-bottom: 1px solid var(--nav-br);
+    box-shadow: var(--nav-shadow);
+  }
+  .modern-nav .navbar-brand{
+    color: #e2e8f0; letter-spacing: .2px;
+  }
+  .modern-nav .navbar-toggler{
+    border: 1px solid rgba(148,163,184,.35) !important;
+  }
+  .modern-nav .nav-link{
+    color: var(--nav-link);
+    border-radius: .6rem;
+    padding: .45rem .7rem;
+    transition: background .15s, color .15s;
+  }
+  .modern-nav .nav-link:hover{
+    background: rgba(79,70,229,.15);
+    color: var(--nav-link-hover);
+  }
+  .modern-nav .nav-link.active{
+    color: var(--nav-active-tx);
+    background: var(--nav-active-grad);
+  }
+  .nav-search .search-input{
+    min-width: 220px; border-radius: .7rem;
+    background: #0f172a; color: #e2e8f0; border-color: #334155;
+  }
+  .nav-search .search-input::placeholder{ color:#94a3b8 }
+  @media (max-width: 576px){
+    .nav-search .search-input{ min-width: 140px; }
+  }
+
+  /* 전체 페이지 배경이 너무 밝으면 헤더만 둥둥 떠 보일 수 있어 기본 배경 권장 */
+  body{ background: #0b1020; color:#e2e8f0; }
+</style>
+</th:block>
+</html>
+

@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.msgshop.product.ProductMapper">
+
+    <!-- ================= 2차 카테고리 상품 목록 ================= -->
+    <select id="getProductListBysecondCategory" resultType="com.msgshop.admin.product.ProductVO" parameterType="com.msgshop.common.utils.SearchCriteria">
+        SELECT 
+            pro_num, cate_code, cate_name, pro_name, pro_price, pro_discount, pro_telephone, pro_content, pro_up_folder, pro_img, pro_buy, pro_review, pro_date
+        FROM product_tbl
+        WHERE cate_code = #{cate_code} 
+          AND pro_buy = 'Y'
+        LIMIT #{cri.pageStart}, #{cri.perPageNum}
+    </select>
+
+    <select id="getCountProductListBysecondCategory" resultType="int">
+        SELECT COUNT(*)
+        FROM product_tbl
+        WHERE cate_code = #{cate_code} 
+          AND pro_buy = 'Y'
+    </select>
+
+    <!-- ================= 상품 상세 조회 ================= -->
+    <select id="pro_info" resultType="com.msgshop.admin.product.ProductVO" parameterType="int">
+        SELECT 
+            pro_num, cate_code, cate_name, pro_name, pro_price, pro_discount, pro_telephone, pro_content, pro_up_folder, pro_img, pro_buy, pro_review, pro_date, pro_zipcode, pro_addr, pro_deaddr
+        FROM product_tbl
+        WHERE pro_num = #{pro_num}       
+    </select>
+
+    <!-- ================= 리뷰 관련 ================= -->
+    <update id="review_count" parameterType="int">
+        UPDATE product_tbl
+        SET pro_review = pro_review + 1
+        WHERE pro_num = #{pro_num}    
+    </update>
+
+    <select id="review_count_pro_info" resultType="int" parameterType="int">
+        SELECT pro_review
+        FROM product_tbl
+        WHERE pro_num = #{pro_num}
+    </select>
+
+    <!-- ================= 필터용: 2차/3차/테마별 ================= -->
+    <select id="selectProductsByFilter" resultType="com.msgshop.admin.product.ProductVO" parameterType="map">
+        SELECT 
+            pro_num, cate_code, sub_cate_code, cate_name, pro_name, pro_price, pro_discount, pro_telephone, pro_content, pro_up_folder, pro_img, pro_buy, pro_review, pro_date
+        FROM product_tbl
+        WHERE 1=1
+        
+        <if test="themeList != null and themeList.size() > 0">
+		    AND theme_code IN ...
+		</if>
+
+        <if test="secondCate != null">
+            AND cate_code = #{secondCate}
+        </if>
+        <if test="thirdCate != null">
+            AND sub_cate_code = #{thirdCate}
+        </if>
+        <if test="themeList != null and themeList.size() > 0">
+            AND theme_code IN
+            <foreach collection="themeList" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        AND pro_buy = 'Y'
+    </select>
+
+    <!-- ================= 지역 + 테마 AND 필터 상품 조회 ================= -->
+	<select id="getProductListByCateAndTheme" resultType="com.msgshop.admin.product.ProductVO" parameterType="map">
+	    SELECT *
+	    FROM product_tbl
+	    WHERE pro_buy = 'Y'
+	
+	    <!-- cate_code 필터 -->
+	    <if test="cate_code != null">
+	        AND cate_code = #{cate_code}
+	    </if>
+	
+	    <!-- 검색 조건 -->
+	    <if test="cri != null">
+	        <if test="cri.keyword != null and cri.keyword != ''">
+	            <choose>
+	                <when test="cri.searchType == 'n'">AND pro_name LIKE CONCAT('%', #{cri.keyword}, '%')</when>
+	                <when test="cri.searchType == 'p'">AND pro_telephone LIKE CONCAT('%', #{cri.keyword}, '%')</when>
+	                <when test="cri.searchType == 'a'">AND pro_addr LIKE CONCAT('%', #{cri.keyword}, '%')</when>
+	            </choose>
+	        </if>
+	
+	        <if test="cri.startDate != null and cri.startDate != ''">
+	            AND pro_date &gt;= #{cri.startDate}
+	        </if>
+	        <if test="cri.endDate != null and cri.endDate != ''">
+	            AND pro_date &lt;= #{cri.endDate}
+	        </if>
+	    </if>
+	
+	    <!-- 테마 필터 -->
+	    <if test="themeList != null and themeList.size() > 0">
+	        AND pro_num IN (
+	            SELECT pro_num
+	            FROM product_theme_tbl
+	            WHERE theme_code IN
+	            <foreach collection="themeList" item="item" open="(" separator="," close=")">
+	                #{item}
+	            </foreach>
+	            GROUP BY pro_num
+	            HAVING COUNT(DISTINCT theme_code) = #{themeListSize}
+	        )
+	    </if>
+	
+	    ORDER BY pro_num DESC
+	
+	    <!-- 페이징 -->
+	    <if test="cri != null">
+	        LIMIT #{cri.pageStart}, #{cri.perPageNum}
+	    </if>
+	</select>
+	
+	<!-- ================= 총 개수 조회 ================= -->
+	<select id="getCountProductListByCateAndTheme" resultType="int" parameterType="map">
+	    SELECT COUNT(*)
+	    FROM product_tbl
+	    WHERE pro_buy = 'Y'
+	    
+	    <!-- cate_code 필터 -->
+	    <if test="cate_code != null">
+	        AND cate_code = #{cate_code}
+	    </if>
+	
+	    <!-- 검색 조건 -->
+	    <if test="cri != null">
+	        <if test="cri.keyword != null and cri.keyword != ''">
+	            <choose>
+	                <when test="cri.searchType == 'n'">AND pro_name LIKE CONCAT('%', #{cri.keyword}, '%')</when>
+	                <when test="cri.searchType == 'p'">AND pro_telephone LIKE CONCAT('%', #{cri.keyword}, '%')</when>
+	                <when test="cri.searchType == 'a'">AND pro_addr LIKE CONCAT('%', #{cri.keyword}, '%')</when>
+	            </choose>
+	        </if>
+	
+	        <if test="cri.startDate != null and cri.startDate != ''">
+	            AND pro_date &gt;= #{cri.startDate}
+	        </if>
+	        <if test="cri.endDate != null and cri.endDate != ''">
+	            AND pro_date &lt;= #{cri.endDate}
+	        </if>
+	    </if>
+	
+	    <!-- 테마 필터 -->
+	    <if test="themeList != null and themeList.size() > 0">
+	        AND pro_num IN (
+	            SELECT pro_num
+	            FROM product_theme_tbl
+	            WHERE theme_code IN
+	            <foreach collection="themeList" item="item" open="(" separator="," close=")">
+	                #{item}
+	            </foreach>
+	            GROUP BY pro_num
+	            HAVING COUNT(DISTINCT theme_code) = #{themeListSize}
+	        )
+	    </if>
+	</select>
+	
+	<!-- ================= 상품 이미지 조회 ================= -->
+	<select id="getProductImages" resultType="com.msgshop.admin.product.ProductImgVO" parameterType="int">
+	    SELECT *
+	    FROM product_img_tbl
+	    WHERE pro_num = #{pro_num}
+	    ORDER BY sort_order ASC
+	</select>
+	
+	<!-- 상품별 후기 조회 -->
+	<select id="selectReviewsByProduct" parameterType="int" resultType="com.msgshop.review.ReviewVO">
+	    SELECT *
+	    FROM review_tbl
+	    WHERE pro_num = #{pro_num}
+	    ORDER BY rev_date DESC
+	</select>
+	
+	<select id="getReviewsWithReplies" parameterType="int" resultMap="reviewWithRepliesMap">
+	    SELECT r.REV_CODE, r.MBSP_ID, r.PRO_NUM, r.REV_CONTENT, r.REV_RATE, r.REV_DATE,
+	           rr.REPLY_ID, rr.MANAGER_ID, rr.REPLY_TEXT, rr.REPLY_DATE
+	    FROM REVIEW_TBL r
+	    LEFT JOIN REVIEW_REPLIES_TBL rr ON r.REV_CODE = rr.REV_CODE
+	    WHERE r.PRO_NUM = #{proNum}
+	    ORDER BY r.REV_DATE DESC, rr.REPLY_DATE ASC
+	</select>
+	
+	<resultMap id="reviewWithRepliesMap" type="com.msgshop.review.ReviewVO">
+	    <id property="rev_code" column="REV_CODE"/>
+	    <result property="mbsp_id" column="MBSP_ID"/>
+	    <result property="pro_num" column="PRO_NUM"/>
+	    <result property="rev_content" column="REV_CONTENT"/>
+	    <result property="rev_rate" column="REV_RATE"/>
+	    <result property="rev_date" column="REV_DATE"/>
+	    <collection property="replies" ofType="com.msgshop.review.ReviewReply">
+	        <id property="reply_id" column="REPLY_ID"/>
+	        <result property="manager_id" column="MANAGER_ID"/>
+	        <result property="reply_text" column="REPLY_TEXT"/>
+	        <result property="reply_date" column="REPLY_DATE"/>
+	    </collection>
+	</resultMap>
+	
+	<insert id="insertReviewReply">
+	    INSERT INTO REVIEW_REPLIES_TBL (REV_CODE, MANAGER_ID, REPLY_TEXT)
+	    VALUES (#{rev_code}, #{manager_id}, #{reply_text})
+	</insert>
+	
+	<!-- 헤더부분 검색창 -->
+	<select id="searchByKeyword" resultType="com.msgshop.admin.product.ProductVO">
+	    SELECT *
+	    FROM product_tbl
+	    WHERE pro_name LIKE CONCAT('%', #{keyword}, '%')
+	       OR pro_telephone LIKE CONCAT('%', #{keyword}, '%')
+	       OR pro_addr LIKE CONCAT('%', #{keyword}, '%')
+	       OR pro_deaddr LIKE CONCAT('%', #{keyword}, '%')
+	       OR pro_extra_addr LIKE CONCAT('%', #{keyword}, '%')
+	</select>
+	
+	<select id="getAllProducts" resultType="com.msgshop.admin.product.ProductVO">
+	    SELECT * FROM product_tbl
+	</select>
+	
+	<!-- 카테고리 이름 조회 -->
+	<select id="getCategoryName" resultType="String" parameterType="int">
+	    SELECT cate_name
+	    FROM category_tbl
+	    WHERE cate_code = #{cate_code}
+	</select>
+	
+	<!-- 상품 테마 이름 리스트 조회 -->
+	<select id="getThemeNamesByProduct" resultType="String" parameterType="int">
+	    SELECT t.theme_name
+	    FROM theme_tbl t
+	    JOIN product_theme_tbl pt ON t.theme_code = pt.theme_code
+	    WHERE pt.pro_num = #{pro_num}
+	</select>
+
+</mapper>
