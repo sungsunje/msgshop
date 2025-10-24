@@ -163,24 +163,31 @@ public class AdReviewController {
 	@GetMapping("/image_display")
 	public ResponseEntity<byte[]> image_display(
 	        @RequestParam("dateFolderName") String dateFolderName,
-	        @RequestParam String fileName) throws Exception {
+	        @RequestParam("fileName") String fileName) {
 
-	    Path filePath = Paths.get(uploadPath, dateFolderName, fileName);
+	    try {
+	        // 폴더 경로 정규화
+	        String normalizedFolder = dateFolderName.replace("\\", "/");
+	        Path filePath = Paths.get(uploadPath, normalizedFolder, fileName);
 
-	    if (!Files.exists(filePath)) {
-	        System.out.println("File not found: " + filePath.toString());
-	        return ResponseEntity.notFound().build();
+	        if (!Files.exists(filePath)) {
+	            log.warn("❌ 이미지 파일 없음: " + filePath.toString());
+	            return ResponseEntity.notFound().build();
+	        }
+
+	        byte[] fileBytes = Files.readAllBytes(filePath);
+	        String contentType = Files.probeContentType(filePath);
+	        if (contentType == null) contentType = "application/octet-stream";
+
+	        return ResponseEntity.ok()
+	                .contentType(MediaType.parseMediaType(contentType))
+	                .body(fileBytes);
+
+	    } catch (Exception e) {
+	        log.error("⚠ 이미지 출력 오류", e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
 	    }
-
-	    byte[] fileBytes = Files.readAllBytes(filePath);
-	    String contentType = Files.probeContentType(filePath);
-	    if (contentType == null) contentType = "application/octet-stream";
-
-	    return ResponseEntity.ok()
-	            .contentType(MediaType.parseMediaType(contentType))
-	            .body(fileBytes);
 	}
-
 
 
 }

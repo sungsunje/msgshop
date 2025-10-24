@@ -55,58 +55,39 @@
 					 <form name="frm_pro_list" id="frm_pro_list" method="post" action="/admin/product/pro_sel_delete_2">
 						<table class="table table-bordered">
 						  <thead>
-							<tr>
-							  <th style="width: 10%;">번호</th>
-							  <th style="width: 10%;">상태</th>
-							  <th style="width: 20%;">업체명</th>
-							  <th style="width: 30%;">이용 후기 내용</th>
-							  <th style="width: 10%">작성자</th>
-							  <th style="width: 10%">작성일</th>
-							  <th style="width: 10%">관리</th>
-							</tr>
+						    <tr>
+						      <th style="width: 10%;">번호</th>
+						      <th style="width: 10%;">상태</th>
+						      <th style="width: 10%;">이미지</th> <!-- 이미지 칸 추가 -->
+						      <th style="width: 20%;">업체명</th>
+						      <th style="width: 30%;">이용 후기 내용</th>
+						      <th style="width: 10%;">작성자</th>
+						      <th style="width: 10%;">작성일</th>
+						      <th style="width: 10%;">관리</th>
+						    </tr>
 						  </thead>
 						  <tbody>
-							<tr th:each= "review_info : ${review_list}">
-							    <td>[[${review_info.rev_code}]]</td>
-								<td>
-									<!--
-									<span th:text="${#lists.size(review_info.replies) > 0 ? '[답변완료]' : '[답변대기]'}"></span>
-									-->
-									<div class="alert alert-success" role="alert" th:if="${#lists.size(review_info.replies) > 0}">답변완료</div>
-									<div class="alert alert-danger" role="alert" th:unless="${#lists.size(review_info.replies) > 0}">답변대기</div>
-								</td>
-								<td><!-- vo,dto 를 결과로 사용할때는 dates, map으로 결과를 사용 할때는  temporals -->
-								[[${review_info.product.pro_name}]]
-								
-							  </td>
-							  <td>	
-							
-								[[${review_info.rev_content}]]
-								<div th:each= "reply : ${review_info.replies}" style="border: 1px; border-style: dashed; border-radius: 10px; border-color: red;padding: 10px;margin-top: 20px;">
-									<div class="row">
-										<div class="col">관리자</div>	
-										<div class="col"><span th:text="${#temporals.format(reply.reply_date, 'yyyy-MM-dd HH:mm:ss')}"></span></div>	
-									</div>
-									<div class="row">
-										<div class="col"><span th:text="${reply.reply_text}"></span></div>
-									</div>
-									<div class="row">
-										<div class="col">
-											<button type="button" class="btn btn-outline-success" name="btn_reply_edit" th:data-reply_id="${reply.reply_id}">답변수정</button>
-											<button type="button" class="btn btn-outline-danger" name="btn_reply_del" th:data-reply_id="${reply.reply_id}">답변삭제</button>
-										</div>										
-									</div>													
-								</div>		
-							  </td>
-							  <td>[[${review_info.mbsp_id}]]</td>
-							  <td>
-								[[${#temporals.format(review_info.rev_date, 'yyyy-MM-dd HH:mm:ss')}]]
-							  
-							  <td>
-								<button type="button" name="openModalBtn" class="btn btn-block btn-sm btn-outline-primary" th:data-rev_code="${review_info.rev_code}">답변하기</button>								
-							  </td>
-							</tr>
-							
+						    <tr th:each="review_info : ${review_list}">
+						        <td>[[${review_info.rev_code}]]</td>
+						        <td>
+						            <div class="alert alert-success" role="alert" th:if="${#lists.size(review_info.replies) > 0}">답변완료</div>
+						            <div class="alert alert-danger" role="alert" th:unless="${#lists.size(review_info.replies) > 0}">답변대기</div>
+						        </td>
+						        <!-- 썸네일 -->
+						        <td>
+						            <img th:if="${review_info.product != null and review_info.product.pro_img != null}" 
+						                 th:src="@{/admin/review/image_display(dateFolderName=${review_info.product.pro_up_folder}, fileName=${review_info.product.pro_img})}" 
+						                 alt="썸네일" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;" />
+						            <span th:unless="${review_info.product != null and review_info.product.pro_img != null}">이미지 없음</span>
+						        </td>
+						        <td>[[${review_info.product.pro_name}]]</td>
+						        <td>[[${review_info.rev_content}]]</td>
+						        <td>[[${review_info.mbsp_id}]]</td>
+						        <td>[[${#temporals.format(review_info.rev_date, 'yyyy-MM-dd HH:mm:ss')}]]</td>
+						        <td>
+						            <button type="button" name="openModalBtn" class="btn btn-block btn-sm btn-outline-primary" th:data-rev_code="${review_info.rev_code}">답변하기</button>
+						        </td>
+						    </tr>
 						  </tbody>
 						</table>
 					</form>
