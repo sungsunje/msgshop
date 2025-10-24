@@ -11,7 +11,7 @@ env:
   AWS_REGION: ap-northeast-2
   AWS_S3_BUCKET: msgshop-s3-bucket
   AWS_CODE_DEPLOY_APPLICATION: msgshop-springboot-webservice
-  AWS_CODE_DEPLOY_GROUP: msgshop-springboot-webservice-group
+  AWS_CODE_DEPLOY_GROUP: msgshop-springboot-webservice3-group
 
 jobs:
   build:
