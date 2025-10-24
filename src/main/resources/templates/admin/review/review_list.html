@@ -58,7 +58,7 @@
 							<tr>
 							  <th style="width: 10%;">번호</th>
 							  <th style="width: 10%;">상태</th>
-							  <th style="width: 20%;">업체정보</th>
+							  <th style="width: 20%;">업체명</th>
 							  <th style="width: 30%;">이용 후기 내용</th>
 							  <th style="width: 10%">작성자</th>
 							  <th style="width: 10%">작성일</th>
@@ -76,8 +76,6 @@
 									<div class="alert alert-danger" role="alert" th:unless="${#lists.size(review_info.replies) > 0}">답변대기</div>
 								</td>
 								<td><!-- vo,dto 를 결과로 사용할때는 dates, map으로 결과를 사용 할때는  temporals -->
-								
-								[[${review_info.pro_num}]]<br>
 								[[${review_info.product.pro_name}]]
 								
 							  </td>
