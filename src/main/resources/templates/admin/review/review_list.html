@@ -79,7 +79,7 @@
 						        <td>
 						            <img th:if="${review_info.product != null and review_info.product.pro_img != null}" 
 						                 th:src="@{/admin/review/image_display(dateFolderName=${review_info.product.pro_up_folder}, fileName=${review_info.product.pro_img})}" 
-						                 alt="썸네일" style="width: 100px; height: 100px; object-fit: cover; border-radius: 5px;" />
+						                 alt="썸네일" style="width: 75px; height: 75px; object-fit: cover; border-radius:8px; border:1px solid #ddd;" />
 						            <span th:unless="${review_info.product != null and review_info.product.pro_img != null}">이미지 없음</span>
 						        </td>
 						        <td>[[${review_info.product.pro_name}]]</td>
