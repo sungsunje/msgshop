@@ -70,14 +70,16 @@
 						    <tr th:each="review_info : ${review_list}">
 						        <td>[[${review_info.rev_code}]]</td>
 						        <td>
-						            <div class="alert alert-success" role="alert" th:if="${#lists.size(review_info.replies) > 0}">답변완료</div>
-						            <div class="alert alert-danger" role="alert" th:unless="${#lists.size(review_info.replies) > 0}">답변대기</div>
+						            <div class="alert alert-success p-1 text-center" style="font-size: 0.8rem;" role="alert" 
+							             th:if="${#lists.size(review_info.replies) > 0}">답변완료</div>
+							        <div class="alert alert-danger p-1 text-center" style="font-size: 0.8rem;" role="alert" 
+							             th:unless="${#lists.size(review_info.replies) > 0}">답변대기</div>
 						        </td>
 						        <!-- 썸네일 -->
 						        <td>
 						            <img th:if="${review_info.product != null and review_info.product.pro_img != null}" 
 						                 th:src="@{/admin/review/image_display(dateFolderName=${review_info.product.pro_up_folder}, fileName=${review_info.product.pro_img})}" 
-						                 alt="썸네일" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;" />
+						                 alt="썸네일" style="width: 100px; height: 100px; object-fit: cover; border-radius: 5px;" />
 						            <span th:unless="${review_info.product != null and review_info.product.pro_img != null}">이미지 없음</span>
 						        </td>
 						        <td>[[${review_info.product.pro_name}]]</td>
