@@ -75,7 +75,7 @@
 									<div class="alert alert-success" role="alert" th:if="${#lists.size(review_info.replies) > 0}">답변완료</div>
 									<div class="alert alert-danger" role="alert" th:unless="${#lists.size(review_info.replies) > 0}">답변대기</div>
 								</td>
-								<td><!-- vo,dto 를 결과로 사용할 때는 dates, map으로 결과를 사용 할때는  temporals -->
+								<td><!-- vo,dto 를 결과로 사용할때는 dates, map으로 결과를 사용 할때는  temporals -->
 								
 								[[${review_info.pro_num}]]<br>
 								[[${review_info.product.pro_name}]]
