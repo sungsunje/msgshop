@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # start.sh
 
-PROJECT="ezenshop-1.0.0"
-PROJECT_NAME=ezenshop
+PROJECT="msgshop-1.0.0"
+PROJECT_NAME=msgshop
 PROJECT_FULL_PATH="/home/ec2-user/app1/step1"
 JAR_FILE="$PROJECT_FULL_PATH/$PROJECT.jar"
 LOG_PATH="$PROJECT_FULL_PATH/logs"
@@ -22,8 +22,8 @@ echo "$NOW_DATETIME > $JAR_FILE 파일 복사" >> $DEPLOY_LOG
 
 cd $PROJECT_FULL_PATH
 
-cp $PROJECT_FULL_PATH/ezenshop/target/*.jar $JAR_FILE
-#sudo cp /home/ec2-user/app1/step1/ezenshop/target/ezenshop-1.0.0.jar.jar ezenshop-1.0.0.jar
+cp $PROJECT_FULL_PATH/msgshop/target/*.jar $JAR_FILE
+#sudo cp /home/ec2-user/app1/step1/msgshop/target/msgshop-1.0.0.jar.jar msgshop-1.0.0.jar
 
 cd $PROJECT_FULL_PATH
 

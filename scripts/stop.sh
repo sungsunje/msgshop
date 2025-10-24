@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # stop.sh
 
-PROJECT="ezenshop-1.0.0"
-PROJECT_NAME=ezenshop
+PROJECT="msgshop-1.0.0"
+PROJECT_NAME=msgshop
 PROJECT_FULL_PATH="/home/ec2-user/app1/step1"
 JAR_FILE="$PROJECT_FULL_PATH/$PROJECT.jar"
 LOG_PATH="$PROJECT_FULL_PATH/logs"
